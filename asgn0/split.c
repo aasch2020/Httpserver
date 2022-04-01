@@ -21,7 +21,7 @@ int main(int argc, char * argv[]){
 	}
        // printf("%d\n", bytreadcnt);
         write(1, inbuff, bytreadcnt);
-       }while(bytreadcnt >= 0);
+       }while(bytreadcnt >= 4096);
       
      }else{
          file = open(argv[i],O_RDONLY);
