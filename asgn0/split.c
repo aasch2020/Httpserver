@@ -11,7 +11,7 @@ int main(int argc, char * argv[]){
   int bytreadcnt = 4096;
   for(int i = 2; i < argc; i++){
      if(strcmp(argv[i], "-") == 0){
-       while(bytreadcnt == 4096 ){
+       do{
         bytreadcnt = read(0, inbuff, 4096);
 	for(int i = 0; i < bytreadcnt; i++){
 	   if(inbuff[i] == delim){
@@ -20,12 +20,12 @@ int main(int argc, char * argv[]){
 	}
         printf("%d\n", bytreadcnt);
         write(1, inbuff, bytreadcnt);
-       }
+       }while(bytreadcnt == 4096);
       
      }else{
          file = open(argv[i],O_RDONLY);
-	 while(bytreadcnt == 4096 ){
- bytreadcnt = read(file , inbuff, 4096);
+	 do{
+         bytreadcnt = read(file , inbuff, 4096);
 
 	for(int i = 0; i < bytreadcnt; i++){
 	   if(inbuff[i] == delim){
@@ -35,7 +35,7 @@ int main(int argc, char * argv[]){
 
                printf("%d\n", bytreadcnt);
         write(1, inbuff, bytreadcnt);
-       }
+       }while(bytreadcnt == 4096);
 
      }
   }
