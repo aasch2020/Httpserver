@@ -4,8 +4,9 @@
 #include<string.h>
 #include<unistd.h>
 #include<fcntl.h>
+
 int main(int argc, char * argv[]){
-  char inbuff[4096];
+  char inbuff[4097];
   char delim = argv[1][0];
   int file = 0;
   int bytreadcnt = 4096;
@@ -18,14 +19,14 @@ int main(int argc, char * argv[]){
 	     inbuff[i] = '\n';
 	   }
 	}
-        printf("%d\n", bytreadcnt);
+       // printf("%d\n", bytreadcnt);
         write(1, inbuff, bytreadcnt);
-       }while(bytreadcnt != 0);
+       }while(bytreadcnt >= 0);
       
      }else{
          file = open(argv[i],O_RDONLY);
 	 do{
-         bytreadcnt = read(file , inbuff, 4096);
+         bytreadcnt = read(file, inbuff, 4096);
 
 	for(int i = 0; i < bytreadcnt; i++){
 	   if(inbuff[i] == delim){
@@ -33,10 +34,12 @@ int main(int argc, char * argv[]){
 	   }
 	}
 
-               printf("%d\n", bytreadcnt);
+     //          printf("%d\n", bytreadcnt);
         write(1, inbuff, bytreadcnt);
-       }while(bytreadcnt != 0);
+       }while(bytreadcnt >= 4096);
+	close(file);
 
      }
   }
+
 }
