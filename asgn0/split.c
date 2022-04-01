@@ -20,7 +20,7 @@ int main(int argc, char * argv[]){
 	}
         printf("%d\n", bytreadcnt);
         write(1, inbuff, bytreadcnt);
-       }while(bytreadcnt == 4096);
+       }while(bytreadcnt != 0);
       
      }else{
          file = open(argv[i],O_RDONLY);
@@ -35,7 +35,7 @@ int main(int argc, char * argv[]){
 
                printf("%d\n", bytreadcnt);
         write(1, inbuff, bytreadcnt);
-       }while(bytreadcnt == 4096);
+       }while(bytreadcnt != 0);
 
      }
   }
