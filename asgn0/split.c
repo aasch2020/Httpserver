@@ -37,7 +37,7 @@ int main(int argc, char * argv[]){
 	 if(file <= 0){
 	  // fprintf(stderr, "Failed to open file\n");
          //  retnum = 2;
-	     warn(1, "couldnt open");
+	     err(1, "couldnt open");
 	 }
 	 do{
          bytreadcnt = read(file, inbuff, 4096);
