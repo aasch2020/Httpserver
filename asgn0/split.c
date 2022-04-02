@@ -35,12 +35,15 @@ int main(int argc, char * argv[]){
      }else{
          file = open(argv[i],O_RDONLY);
 	 if(file <= 0){
-	   fprintf(stderr, "Failed to open file\n");
-           retnum = 2;
+	  // fprintf(stderr, "Failed to open file\n");
+         //  retnum = 2;
+	     warn(1, "couldnt open");
 	 }
 	 do{
          bytreadcnt = read(file, inbuff, 4096);
-
+        if(bytreadcnt < 0){
+	  return 245;
+	}
 	for(int i = 0; i < bytreadcnt; i++){
 	   if(inbuff[i] == delim){
 	     inbuff[i] = '\n';
