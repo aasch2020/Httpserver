@@ -29,7 +29,9 @@ int main(int argc, char * argv[]){
 	   }
 	}
        // printf("%d\n", bytreadcnt);
-        write(1, inbuff, bytreadcnt);
+        if(-1 == write(1, inbuff, bytreadcnt)){
+		retnum = 245;
+	}
        }while(bytreadcnt >= 4096);
       
      }else{
@@ -49,7 +51,10 @@ int main(int argc, char * argv[]){
 	}
 
      //          printf("%d\n", bytreadcnt);
-        write(1, inbuff, bytreadcnt);
+       if( -1 == write(1, inbuff, bytreadcnt)){
+           retnum = 245;
+       }
+
        }while(bytreadcnt >= 4096);
 	close(file);
 
