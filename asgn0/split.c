@@ -37,7 +37,7 @@ int main(int argc, char * argv[]){
 	 if(file <= 0){
 	  // fprintf(stderr, "Failed to open file\n");
            retnum = 2;
-	     err(1, "couldnt open");
+	//     err(1, "couldnt open");
 	 }
 	 do{
          bytreadcnt = read(file, inbuff, 4096);
@@ -49,9 +49,7 @@ int main(int argc, char * argv[]){
 	}
 
      //          printf("%d\n", bytreadcnt);
-        if( -1 == write(1, inbuff, bytreadcnt)){
-	  retnum = 245;
-	}
+        write(1, inbuff, bytreadcnt);
        }while(bytreadcnt >= 4096);
 	close(file);
 
