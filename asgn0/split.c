@@ -32,7 +32,7 @@ int main(int argc, char * argv[]){
         if(-1 == write(1, inbuff, bytreadcnt)){
 		retnum = 245;
 	}
-       }while(bytreadcnt >= 4096);
+       }while(bytreadcnt > 0);
       
      }else{
          file = open(argv[i],O_RDONLY);
