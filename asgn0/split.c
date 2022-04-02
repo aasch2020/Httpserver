@@ -4,9 +4,18 @@
 #include<string.h>
 #include<unistd.h>
 #include<fcntl.h>
-
+#include<err.h>
 int main(int argc, char * argv[]){
   char inbuff[4097];
+  int retnum = 0;
+  if(argc < 3){
+    fprintf(stderr, "improper args\n");
+    return 22;
+  }
+  if(strlen(argv[1])> 1){
+    fprintf(stderr, "multi char delim\n");
+    return 2;
+  }
   char delim = argv[1][0];
   int file = 0;
   int bytreadcnt = 4096;
@@ -25,6 +34,10 @@ int main(int argc, char * argv[]){
       
      }else{
          file = open(argv[i],O_RDONLY);
+	 if(file <= 0){
+	   fprintf(stderr, "Failed to open file\n");
+           retnum = 2;
+	 }
 	 do{
          bytreadcnt = read(file, inbuff, 4096);
 
@@ -41,5 +54,6 @@ int main(int argc, char * argv[]){
 
      }
   }
+  return retnum;
 
 }
