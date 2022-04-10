@@ -6,14 +6,14 @@
 #include <fcntl.h>
 #include <err.h>
 int main(int argc, char *argv[]) {
-    char inbuff[4097];
+    char inbuff[4096];
     int retnum = 0;
     if (argc < 3) {
-        fprintf(stderr, "improper args\n");
+        fprintf(stderr, "improper args, must have a delimiter and a source file\n");
         return 22;
     }
     if (strlen(argv[1]) > 1) {
-        fprintf(stderr, "multi char delim\n");
+        fprintf(stderr, "multi character delimiter, use only single character delimiter.\n");
         return 2;
     }
     char delim = argv[1][0];
@@ -28,18 +28,17 @@ int main(int argc, char *argv[]) {
                         inbuff[i] = '\n';
                     }
                 }
-                // printf("%d\n", bytreadcnt);
                 if (-1 == write(1, inbuff, bytreadcnt)) {
                     retnum = 245;
+                    fprintf(stderr, "Failed to write to stdout\n");
                 }
             } while (bytreadcnt > 0);
 
         } else {
             file = open(argv[i], O_RDONLY);
             if (file <= 0) {
-                // fprintf(stderr, "Failed to open file\n");
+                fprintf(stderr, "Failed to open file\n");
                 retnum = 2;
-                //     err(1, "couldnt open");
             }
             do {
                 bytreadcnt = read(file, inbuff, 4096);
@@ -50,7 +49,6 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
-                //          printf("%d\n", bytreadcnt);
                 if (-1 == write(1, inbuff, bytreadcnt)) {
                     retnum = 245;
                 }

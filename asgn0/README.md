@@ -23,3 +23,7 @@ The files can be as many as possible, and will be listed after the delimiter
 
 The notable design decisions for this document include choosing to buffer the input in blocks as to reduce the amount of read and write.
 Also opening and closing files one by one as not to have multiple files open at once.
+
+## Error Messages.
+
+The program will error when read or write fail, as well as when command line arguments are not used properly. It will return a relevant message along with the error, but will try to continue to split input files.
