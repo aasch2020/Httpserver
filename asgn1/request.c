@@ -68,7 +68,7 @@ int validate(Request *r){
 
 int execute(Request *r){
   if(strcmp(r->type, "GET") == 0){
-    
+     
   }
 
 
