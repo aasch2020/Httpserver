@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <regex.h>
+#include "request.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -47,9 +48,32 @@ int create_listen_socket(uint16_t port) {
     }
     return listenfd;
 }
+
+
+#define BUF_SIZE 4096
 void handle_connection(int connfd) {
-    // make the compiler not complain
-    (void) connfd;
+    char buffer[BUF_SIZE];
+  ssize_t bytez = 0;
+  char req[8], uri[21];
+  unsigned int vernum, verdec;
+ /// read all bytes from connfd un:Wq
+  //til we see an error or EOF
+ 
+ while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
+     
+     if( 4 != sscanf(buffer,"%8[a-zA-Z] %20s HTTP/%u.%u", req, uri, &vernum, &verdec)){
+        printf("invalid request\n");
+     }else{
+         Request* got = request_create(req, uri, vernum, verdec);
+     if(0!= validate(got)){
+       printf("invalid req");
+     }
+     print_req(got);
+     }
+      
+     }
+     
+  (void)connfd;
 }
 int main(int argc, char *argv[]) {
     int listenfd;
