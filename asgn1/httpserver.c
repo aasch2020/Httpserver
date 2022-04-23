@@ -52,14 +52,16 @@ int create_listen_socket(uint16_t port) {
 
 #define BUF_SIZE 4096
 void handle_connection(int connfd) {
-    char buffer[BUF_SIZE];
+  char buffer[BUF_SIZE];
   ssize_t bytez = 0;
   char req[8], uri[21];
+  char header_key[2048], header_val[2048];
   unsigned int vernum, verdec;
+  int readin = 0;
  /// read all bytes from connfd un:Wq
   //til we see an error or EOF
  
- while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
+   while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
      
      if( 4 != sscanf(buffer,"%8[a-zA-Z] %20s HTTP/%u.%u", req, uri, &vernum, &verdec)){
         printf("invalid request\n");
@@ -68,6 +70,13 @@ void handle_connection(int connfd) {
      if(0!= validate(got)){
        printf("invalid req");
      }
+   while(2 == sscanf(buffer+(strlen(req)+strlen(uri)+12+readin), "%2048[^':']: %s\r\n", header_key, header_val)){
+          printf("do the thing\n");
+	  readin += strlen(header_key)+ strlen(header_val) + 5;
+	//  printf("remaining\n %s buffer\n", buffer+(strlen(req)+strlen(uri) +12+ readin));
+      add_header(got, header_key, header_val);
+       printf("%s, %s\n", header_key, header_val);
+    }
      print_req(got);
      }
       
