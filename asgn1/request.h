@@ -9,3 +9,7 @@ void add_header(Request *r, char *header_key, char *header_val);
 void print_req(Request *r);
 
 int validate(Request *r);
+
+int type(Request *r);
+
+const char* get_uri(Request *r);

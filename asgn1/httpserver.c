@@ -52,32 +52,54 @@ int create_listen_socket(uint16_t port) {
 #define BUF_SIZE 4096
 void handle_connection(int connfd) {
     char buffer[BUF_SIZE];
+    char bufferread[BUF_SIZE];
     ssize_t bytez = 0;
-    char req[8], uri[21];
+    ssize_t byteget = 0;
+    char req[8], uri[22];
+    uri[0] = '.';
     char header_key[2048], header_val[2048];
     unsigned int vernum, verdec;
     int readin = 0;
+    int validates, types, fileop;
     /// read all bytes from connfd un:Wq
     //til we see an error or EOF
 
     while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
 
-        if (4 != sscanf(buffer, "%8[a-zA-Z] %20s HTTP/%u.%u", req, uri, &vernum, &verdec)) {
-            printf("invalid request\n");
+        if (4 != sscanf(buffer, "%8[a-zA-Z] %20s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
+            printf("invalid request 1 \n");
         } else {
             Request *got = request_create(req, uri, vernum, verdec);
             if (0 != validate(got)) {
-                printf("invalid req");
+                printf("invalid req 2\n");
             }
             while (2
-                   == sscanf(buffer + (strlen(req) + strlen(uri) + 12 + readin),
+                   == sscanf(buffer + (strlen(req) + strlen(uri) + 11 + readin),
                        "%2048[^':']: %s\r\n", header_key, header_val)) {
                 printf("do the thing\n");
                 readin += strlen(header_key) + strlen(header_val) + 5;
                 //  printf("remaining\n %s buffer\n", buffer+(strlen(req)+strlen(uri) +12+ readin));
-                add_header(got, header_key, header_val);
-                printf("%s, %s\n", header_key, header_val);
+                add_header(got, header_key, header_val); 
             }
+	    validates = validate(got);
+	    if(validates != 0){
+	      if(validates == 2){
+	        printf("unimplemented request\n");
+	      }
+
+	    }
+	    types = type(got);
+	    if(types == 1){
+	      write(connfd, "GET request\r\n", 13);
+	      printf("URI = %s\n", get_uri(got));
+	      fileop = open(get_uri(got), O_RDONLY);
+	      while((byteget = read(fileop, bufferread, BUF_SIZE)) > 0){
+		 printf("doing the writeaaa\n");
+	         write(connfd, bufferread, byteget);
+	       
+	      }
+	    }
+             
             print_req(got);
         }
     }
