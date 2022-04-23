@@ -93,6 +93,17 @@ void handle_connection(int connfd) {
 	      write(connfd, "GET request\r\n", 13);
 	      printf("URI = %s\n", get_uri(got));
 	      fileop = open(get_uri(got), O_RDONLY);
+	      int therr = errno;
+	      if(fileop == -1){
+	         if(therr == 2){
+		    printf("no file 404");
+
+		 }
+		 if(therr == 13){
+		   printf("no perm");
+		 }
+	      
+	      }
 	      while((byteget = read(fileop, bufferread, BUF_SIZE)) > 0){
 		 printf("doing the writeaaa\n");
 	         write(connfd, bufferread, byteget);
