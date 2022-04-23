@@ -65,13 +65,24 @@ void handle_connection(int connfd) {
     //til we see an error or EOF
 
     while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
-
+      printf("loop top\n");
+ memset(req, 0, 8);
+		 memset(uri+1, 0, 21);
+	
         if (4 != sscanf(buffer, "%8[a-zA-Z] %20s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
             printf("invalid request 1 \n");
+    memset(req, 0, 8);
+		 memset(uri+1, 0, 21);
+		  memset(buffer, 0, bytez);
+
         } else {
             Request *got = request_create(req, uri, vernum, verdec);
             if (0 != validate(got)) {
                 printf("invalid req 2\n");
+                memset(req, 0, 8);
+		 memset(uri+1, 0, 21);
+		 
+
             }
             while (2
                    == sscanf(buffer + (strlen(req) + strlen(uri) + 11 + readin),
@@ -113,6 +124,9 @@ void handle_connection(int connfd) {
              
             print_req(got);
         }
+         memset(req, 0, 8);
+		 memset(uri+1, 0, 21);
+		
     }
 
     (void) connfd;
