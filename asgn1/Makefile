@@ -16,5 +16,4 @@ clean:
 	rm -f httpserver httpserver.o request.o
 
 format:
-
 	clang-format -i -style=file *.[ch]
