@@ -108,3 +108,16 @@ int type(Request *r){
 const char* get_uri(Request *r){
   return r->uri;
 }
+
+int execute(Request *r){
+  int types = type(r);
+  if(types = 1){
+    
+  }
+  if(types = 2){
+  }
+  if(types = 3){
+  
+  }
+
+}
