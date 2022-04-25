@@ -3,15 +3,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <regex.h>
+
+
 struct Request {
-    char type[8], uri[21];
+    char type[9], uri[22];
     unsigned int vernum;
     unsigned int verdec;
     char **header_key;
     char **header_vals;
     int numheads;
-    regex_t reg;
-    regex_t regmethod;
 };
 
 Request *request_create(char *type, char *uri, int vernum, int verdec) {
@@ -23,10 +23,7 @@ Request *request_create(char *type, char *uri, int vernum, int verdec) {
     r->numheads = 0;
     r->header_key = (char **) calloc(30, sizeof(char *));
     r->header_vals = (char **) calloc(30, sizeof(char *));
-    regcomp(&(r->regmethod), "[A-Za-z]+", REG_EXTENDED);
-    regcomp(&(r->reg), "([/]([a-zA-Z0-9._]+))+", REG_EXTENDED);
-
-    return r;
+      return r;
 }
 
 void request_delete(Request **r) {
@@ -36,21 +33,19 @@ void request_delete(Request **r) {
     }
     free((*r)->header_vals);
     free((*r)->header_key);
-    regfree(&(*r)->regmethod);
-    regfree(&(*r)->reg);
-    free(*r);
+       free(*r);
 }
 
-void add_header(Request *r, char *header_keyin, char *header_valin) {
-    int lenstr = strlen(header_keyin);
-    printf("%s\n", header_keyin);
-    printf("%s\n", header_valin);
+void add_header(Request *r, char *header_total) {
+    printf("%s\n", header_total);
+
     printf("%d\n", r->numheads);
-    int lenval = strlen(header_valin);
-    r->header_key[r->numheads] = (char *) calloc(lenstr, sizeof(char));
-    r->header_vals[r->numheads] = (char *) calloc(lenval, sizeof(char));
-    strcpy(r->header_key[r->numheads], header_keyin);
-    strcpy(r->header_vals[r->numheads], header_valin);
+    char* header_keyin = (char*)calloc(strlen(header_total)); 
+    char* header_valin =  (char*)calloc(strlen(header_total));  
+    sscanf(header_total, "%[^':']: %s", header_keyin, header_valin);
+    r->header_key[r->numheads] = header_keyin;
+    r->header_vals[r->numheads] = header_valin;
+
     r->numheads += 1;
     if (r->numheads % 30 == 0) {
         printf("this shouldn't happen\n");
@@ -63,61 +58,129 @@ void add_header(Request *r, char *header_keyin, char *header_valin) {
 void print_req(Request *r) {
     printf("%s, %s, HTTP/%u.%u\r\n", r->type, r->uri, r->vernum, r->verdec);
     for (int i = 0; i < r->numheads; i++) {
-       printf("%s\n", r->header_key[i]);
-       printf("%s\n", r->header_vals[i]);
-
+        printf("%s\n", r->header_key[i]);
+        printf("%s\n", r->header_vals[i]);
     }
-
 }
 
 int validate(Request *r) {
     int regs;
+    regex_t reg;
+    regex_t regmethod;
+ 
+
+    regcomp(regmethod, "[A-Za-z]+", REG_EXTENDED);
+    regcomp(reg, "([/]([a-zA-Z0-9._]+))+", REG_EXTENDED);
     regs = regexec(&(r->reg), r->uri, 0, NULL, 0);
     if (regs != 0) {
+	   regfree(regmethod);
+    regfree(reg);
+  
         return 1;
     }
-    if(0 != regexec(&(r->regmethod), r->type, 0, NULL, 0)){
-       return 1;
+    if (0 != regexec(&(r->regmethod), r->type, 0, NULL, 0)) {
+          regfree(regmethod);
+    regfree(reg);
+  
+	    return 1;
     }
 
-    if(!(((strcmp(r->type, "GET") == 0) || (strcmp(r->type, "PUT") == 0)) ||  (strcmp(r->type, "APPEND") == 0))){
-       return 2;
+    if (!(((strcmp(r->type, "GET") == 0) || (strcmp(r->type, "PUT") == 0))
+            || (strcmp(r->type, "APPEND") == 0))) {
+          regfree(reg);
+    regfree(reg);
+  
+	    return 2;
     }
-    if(!((r->vernum == 1) && (r->verdec == 1))){
-      return 2;
+    if (!((r->vernum == 1) && (r->verdec == 1))) {
+          regfree(regmethod);
+    regfree(reg);
+  
+	    return 2;
+    }
+   regfree(reg);
+    regfree(reghead);
+  
+    return 0;
+}
+
+int type(Request *r) {
+    if (strcmp(r->type, "GET") == 0) {
+        return 1;
+    }
+    if (strcmp(r->type, "PUT") == 0) {
+        return 2;
+    }
+    if (strcmp(r->type, "APPEND") == 0) {
+        return 3;
     }
     return 0;
-
-
 }
 
-int type(Request *r){
-  if(strcmp(r->type, "GET") == 0){
-    return 1;
-  }
-   if(strcmp(r->type, "PUT") == 0){
-    return 2;
-  }
-  if(strcmp(r->type, "APPEND") == 0){
-    return 3;
-  }
-  return 0;
+const char *get_uri(Request *r) {
+    return r->uri;
+}
+int add_headderbuff(
+    Request *r, char *buff, int start, int end, char *header_key, char *header_val) {
+    regex_t reghead;
+    char* matchstr;
+    int lenmatch;
+    int nummatch = 0;
+//    int prevmatchend = start;
+    ssize_t spot = 0;
+    regcomp(reghead, "[0-~]+[:][ ]+[ -~]+[\r\n]", REG_EXTENDED);
+    regmatch_t regs[1];
+    while(0 == regexec(reghead, buff + start+spot, 1, regs, NOT_BOL)){
+       nummatch++;
+       lenmatch = regs.rm_eo - regs.rm_so;
+       printf("%d\n", lenmatch);
+       matchstr = strndup(buff+start+spot, lenmatch);
+       add_header(r, matchstr);
+       spot += lenmatch;
+       free(matchstr);
+       if(spot+start == end){
+         break;
+       }
+       if((*(buff+start+spot+1)=='\r')&& (*(buff+start+spot+2)=='\n')){
+          regfree(&(*r)->reg);
+          return start+spot;
 
+       }
+       
+    }
+    regfree(&(*r)->reg);
+    return 0;
+  
 }
 
-const char* get_uri(Request *r){
-  return r->uri;
-}
-
-int execute(Request *r){
+/*int execute(Request *r){
   int types = type(r);
-  if(types = 1){
-    
+  if(types == 1){
+    write(connfd, "GET request\r\n", 13);
+	      printf("URI = %s\n", get_uri(got));
+	      fileop = open(get_uri(got), O_RDONLY);
+	      int therr = errno;
+	      if(fileop == -1){
+	         if(therr == 2){
+		    printf("no file 404");
+
+		 }
+		 if(therr == 13){
+		   printf("no perm");
+		 }
+	      
+	      }
+	      while((byteget = read(fileop, bufferread, BUF_SIZE)) > 0){
+		 printf("doing the writeaaa\n");
+	         write(connfd, bufferread, byteget);
+	       
+	      }
+ 
   }
-  if(types = 2){
+  if(types == 2){
   }
-  if(types = 3){
+  if(types == 3){
   
   }
 
-}
+}*/

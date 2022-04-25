@@ -52,76 +52,53 @@ int create_listen_socket(uint16_t port) {
 #define BUF_SIZE 4096
 void handle_connection(int connfd) {
     char buffer[BUF_SIZE];
-    char bufferread[BUF_SIZE];
+    // char bufferread[BUF_SIZE];
     char headbuff[BUF_SIZE];
     ssize_t bytez = 0;
- //   int processed = 0;
-    ssize_t byteget = 0;
+    //   int processed = 0;
+    //   ssize_t byteget = 0;
     char req[8], uri[22];
     uri[0] = '.';
+    int totalread;
     char header_key[2048], header_val[2048];
     unsigned int vernum, verdec;
     ssize_t readin = 0;
-    int validates, types, fileop;
+    int validates, types /*, fileop*/;
     int allheads = 0;
     /// read all bytes from connfd un:Wq
     //til we see an error or EOF
-   
+
     while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
-      printf("loop top\n");
+        printf("loop top\n");
 
         if (4 != sscanf(buffer, "%8[a-zA-Z] %20s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
             printf("invalid request 1 \n");
         } else {
             Request *got = request_create(req, uri, vernum, verdec);
-            while(!allheads){
-            if(bytez == (long)(strlen(req) + strlen(uri) + 11 + readin)){
-	      read(connfd, headbuff, BUF_SIZE);
-	    }
             while (2
-                   == sscanf(headbuff+readin,
+                   == sscanf(buffer + readin + strlen(req) + strlen(uri) + 11,
                        "%2048[^':']: %s\r\n", header_key, header_val)) {
                 printf("do the thing\n");
-                readin += strlen(header_key) + strlen(header_val) + 4;
-		printf("why");
+                readin += strlen(header_key) + strlen(header_val) + 5;
+                printf("why");
                 //  printf("remaining\n %s buffer\n", buffer+(strlen(req)+strlen(uri) +12+ readin));
                 add_header(got, header_key, header_val);
-                	
             }
-            allheads=1;
+            allheads = 1;
             printf("stuck here\n");
-	    }
-	    validates = validate(got);
-	   
-	    types = type(got);
-	    if(types == 1){
-	      write(connfd, "GET request\r\n", 13);
-	      printf("URI = %s\n", get_uri(got));
-	      fileop = open(get_uri(got), O_RDONLY);
-	      int therr = errno;
-	      if(fileop == -1){
-	         if(therr == 2){
-		    printf("no file 404");
-
-		 }
-		 if(therr == 13){
-		   printf("no perm");
-		 }
-	      
-	      }
-	      while((byteget = read(fileop, bufferread, BUF_SIZE)) > 0){
-		 printf("doing the writeaaa\n");
-	         write(connfd, bufferread, byteget);
-	       
-	      }
-	    }
-             
-            print_req(got);
         }
-    memset(buffer, 0, BUF_SIZE);
-    }
+        validates = validate(got);
 
-    (void) connfd;
+        types = type(got);
+        if (types == 1) {
+        }
+
+        print_req(got);
+    }
+    memset(buffer, 0, BUF_SIZE);
+}
+
+(void) connfd;
 }
 int main(int argc, char *argv[]) {
     int listenfd;
