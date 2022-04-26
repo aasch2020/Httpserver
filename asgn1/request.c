@@ -38,11 +38,11 @@ void request_delete(Request **r) {
 
 void add_header(Request *r, char *header_total) {
     printf("%s\n", header_total);
-
-    printf("%d\n", r->numheads);
-    char* header_keyin = (char*)calloc(strlen(header_total)); 
-    char* header_valin =  (char*)calloc(strlen(header_total));  
-    sscanf(header_total, "%[^':']: %s", header_keyin, header_valin);
+    int len = strlen(header_total);
+    printf("%s, length is %d\n", header_total, len);
+    char* header_keyin = (char*)calloc(len, sizeof(char)); 
+    char* header_valin =  (char*)calloc(len, sizeof(char));  
+    sscanf(header_total, "%[^':']: %[^'\r']", header_keyin, header_valin);
     r->header_key[r->numheads] = header_keyin;
     r->header_vals[r->numheads] = header_valin;
 
@@ -61,6 +61,7 @@ void print_req(Request *r) {
         printf("%s\n", r->header_key[i]);
         printf("%s\n", r->header_vals[i]);
     }
+    printf("done print");
 }
 
 int validate(Request *r) {
@@ -69,37 +70,37 @@ int validate(Request *r) {
     regex_t regmethod;
  
 
-    regcomp(regmethod, "[A-Za-z]+", REG_EXTENDED);
-    regcomp(reg, "([/]([a-zA-Z0-9._]+))+", REG_EXTENDED);
-    regs = regexec(&(r->reg), r->uri, 0, NULL, 0);
+    regcomp(&regmethod, "[A-Za-z]+", REG_EXTENDED);
+    regcomp(&reg, "([/]([a-zA-Z0-9._]+))+", REG_EXTENDED);
+    regs = regexec(&reg, r->uri, 0, NULL, 0);
     if (regs != 0) {
-	   regfree(regmethod);
-    regfree(reg);
+	   regfree(&regmethod);
+    regfree(&reg);
   
         return 1;
     }
-    if (0 != regexec(&(r->regmethod), r->type, 0, NULL, 0)) {
-          regfree(regmethod);
-    regfree(reg);
+    if (0 != regexec(&regmethod, r->type, 0, NULL, 0)) {
+          regfree(&regmethod);
+    regfree(&reg);
   
 	    return 1;
     }
 
     if (!(((strcmp(r->type, "GET") == 0) || (strcmp(r->type, "PUT") == 0))
             || (strcmp(r->type, "APPEND") == 0))) {
-          regfree(reg);
-    regfree(reg);
+          regfree(&reg);
+    regfree(&reg);
   
 	    return 2;
     }
     if (!((r->vernum == 1) && (r->verdec == 1))) {
-          regfree(regmethod);
-    regfree(reg);
+          regfree(&regmethod);
+    regfree(&reg);
   
 	    return 2;
     }
-   regfree(reg);
-    regfree(reghead);
+   regfree(&reg);
+    regfree(&regmethod);
   
     return 0;
 }
@@ -121,35 +122,37 @@ const char *get_uri(Request *r) {
     return r->uri;
 }
 int add_headderbuff(
-    Request *r, char *buff, int start, int end, char *header_key, char *header_val) {
+    Request *r, char *buff, int start, int end) {
     regex_t reghead;
     char* matchstr;
     int lenmatch;
     int nummatch = 0;
+    int total_read = 0;
 //    int prevmatchend = start;
     ssize_t spot = 0;
-    regcomp(reghead, "[0-~]+[:][ ]+[ -~]+[\r\n]", REG_EXTENDED);
+    regcomp(&reghead, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     regmatch_t regs[1];
-    while(0 == regexec(reghead, buff + start+spot, 1, regs, NOT_BOL)){
+    while(0 == regexec(&reghead, buff + start+spot, 1, regs, REG_NOTEOL)){
        nummatch++;
-       lenmatch = regs.rm_eo - regs.rm_so;
-       printf("%d\n", lenmatch);
+       lenmatch = regs->rm_eo - regs->rm_so;
+//       printf("%d\n", lenmatch);
        matchstr = strndup(buff+start+spot, lenmatch);
+ //      printf("%s\n", matchstr);
        add_header(r, matchstr);
        spot += lenmatch;
        free(matchstr);
        if(spot+start == end){
          break;
        }
-       if((*(buff+start+spot+1)=='\r')&& (*(buff+start+spot+2)=='\n')){
-          regfree(&(*r)->reg);
-          return start+spot;
+       if((*(buff+start+spot)=='\r')&& (*(buff+start+spot)=='\r')){
+          total_read =  start+spot+2;
+	  printf("breaking right");
 
        }
        
     }
-    regfree(&(*r)->reg);
-    return 0;
+    regfree(&reghead);
+    return total_read;
   
 }
 

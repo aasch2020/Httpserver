@@ -6,7 +6,8 @@ void request_delete(Request **r);
 
 void add_header(Request *r, char *header_total);
 
-int add_headderbuff(Request *r, char *buff, int start, int end, char *header_key, char *header_val);
+
+int add_headderbuff(Request *r, char *buff, int start, int end);
 
 void print_req(Request *r);
 
