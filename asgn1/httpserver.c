@@ -72,14 +72,15 @@ void handle_connection(int connfd) {
     while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
         printf("loop top\n");
 
-        if (4 != sscanf(buffer, "%8[a-zA-Z] %20s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
+        if (4 != sscanf(buffer, "%[a-zA-Z] %s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
 	 
             printf("invalid request 1 \n");
         } else {
    proced = strlen(req) + strlen(uri) + 10; 
             got = request_create(req, uri, vernum, verdec);
-             print_req(got); 
+           
 	    int headread = add_headderbuff(got, buffer, proced, bytez);
+	    printf("%d\n", headread);
 	    while(headread == -1){
 	      while((headread == -1) && ((subbytes = read(connfd, buffer, BUF_SIZE)) > 0)){
 		printf("reading extra\n");
@@ -98,7 +99,7 @@ void handle_connection(int connfd) {
     
     memset(buffer, 0, BUF_SIZE);
    }
-
+   printf("broke the while");
 (void) connfd;
 }
 int main(int argc, char *argv[]) {

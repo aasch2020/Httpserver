@@ -122,21 +122,24 @@ const char *get_uri(Request *r) {
     return r->uri;
 }
 int add_headderbuff(
-    Request *r, char *buff, int start,  int end) {
-    regex_t reghead;
+  
+
+	    	Request *r, char *buff, int start,  int end) {
+      printf("add headder from buffer\n");
+	regex_t reghead;
     char* matchstr;
     int lenmatch;
     int nummatch = 0;
     int total_read = 0;
 //    int prevmatchend = start;
     ssize_t spot = 0;
-    bool moreheads = false;
+    bool moreheads = true;
     regcomp(&reghead, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     regmatch_t regs[1];
     while(0 == regexec(&reghead, buff + start + spot, 1, regs, REG_NOTEOL)){
        nummatch++;
        lenmatch = regs->rm_eo - regs->rm_so;
-//       printf("%d\n", lenmatch);
+      printf(" match point is%d\n", lenmatch);
        matchstr = strndup(buff+start+spot, lenmatch);
  //      printf("%s\n", matchstr);
        add_header(r, matchstr);
@@ -144,6 +147,7 @@ int add_headderbuff(
        free(matchstr);
        if(spot+start == end){
          break;
+	 printf("%ld, %dread all\n", spot+start, end);
 	 moreheads = true;
        }
        if((*(buff+start+spot)=='\r')&& (*(buff+start+spot)=='\r')){
@@ -154,7 +158,7 @@ int add_headderbuff(
        
     }
     regfree(&reghead);
-    if(moreheads){
+    if(spot+start == end){
       return -1;
     }
     return total_read;
