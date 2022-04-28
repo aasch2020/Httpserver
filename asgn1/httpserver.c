@@ -53,50 +53,49 @@ int create_listen_socket(uint16_t port) {
 void handle_connection(int connfd) {
     char buffer[BUF_SIZE];
     // char bufferread[BUF_SIZE];
-    char headbuff[BUF_SIZE];
+  //  char headbuff[BUF_SIZE];
     ssize_t bytez = 0;
     //   int processed = 0;
     //   ssize_t byteget = 0;
     char req[8], uri[22];
     uri[0] = '.';
-    int totalread;
-    char header_key[2048], header_val[2048];
+  //  int totalread;
     unsigned int vernum, verdec;
-    ssize_t readin = 0;
+   // ssize_t readin = 0;
     int validates, types /*, fileop*/;
-    int allheads = 0;
+   // int allheads = 0;
+    int proced = 0;
+    int subbytes;
     /// read all bytes from connfd un:Wq
     //til we see an error or EOF
-
+    Request *got = NULL;
     while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
         printf("loop top\n");
 
         if (4 != sscanf(buffer, "%8[a-zA-Z] %20s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
+	    proced = strlen(req) + strlen(uri) + 10; 
             printf("invalid request 1 \n");
         } else {
-            Request *got = request_create(req, uri, vernum, verdec);
-            while (2
-                   == sscanf(buffer + readin + strlen(req) + strlen(uri) + 11,
-                       "%2048[^':']: %s\r\n", header_key, header_val)) {
-                printf("do the thing\n");
-                readin += strlen(header_key) + strlen(header_val) + 5;
-                printf("why");
-                //  printf("remaining\n %s buffer\n", buffer+(strlen(req)+strlen(uri) +12+ readin));
-                add_header(got, header_key, header_val);
-            }
-            allheads = 1;
-            printf("stuck here\n");
-        }
+            got = request_create(req, uri, vernum, verdec);
+            
+	    int headread = add_headderbuff(got, buffer, proced, bytez);
+	    while(headread == -1){
+	      while(((subbytes = read(connfd, buffer, BUF_SIZE)) > 0) && (headread == -1)){
+	        headread = add_headderbuff(got, buffer, 0, subbytes);
+	      }
+	    }
+	    print_req(got);
+
+	    
+	}
         validates = validate(got);
 
         types = type(got);
-        if (types == 1) {
-        }
-
-        print_req(got);
-    }
+	printf("printing the request\n\n\n");
+          print_req(got);
+    
     memset(buffer, 0, BUF_SIZE);
-}
+   }
 
 (void) connfd;
 }

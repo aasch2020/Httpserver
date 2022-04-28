@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <regex.h>
-
+#include <stdbool.h>
 
 struct Request {
     char type[9], uri[22];
@@ -16,8 +16,8 @@ struct Request {
 
 Request *request_create(char *type, char *uri, int vernum, int verdec) {
     Request *r = (Request *) calloc(1, sizeof(Request));
-    strcpy(r->type, type);
-    strcpy(r->uri, uri);
+    strncpy(r->type, type, 8);
+    strncpy(r->uri, uri, 8);
     r->vernum = vernum;
     r->verdec = verdec;
     r->numheads = 0;
@@ -27,7 +27,7 @@ Request *request_create(char *type, char *uri, int vernum, int verdec) {
 }
 
 void request_delete(Request **r) {
-    for (int i = 0; i < ((*r)->numheads); i++) {
+    for (int i = 0; i <= ((*r)->numheads); i++) {
         free((*r)->header_key[i]);
         free((*r)->header_vals[i]);
     }
@@ -130,6 +130,7 @@ int add_headderbuff(
     int total_read = 0;
 //    int prevmatchend = start;
     ssize_t spot = 0;
+    bool moreheads = false;
     regcomp(&reghead, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     regmatch_t regs[1];
     while(0 == regexec(&reghead, buff + start+spot, 1, regs, REG_NOTEOL)){
@@ -143,6 +144,7 @@ int add_headderbuff(
        free(matchstr);
        if(spot+start == end){
          break;
+	 moreheads = true;
        }
        if((*(buff+start+spot)=='\r')&& (*(buff+start+spot)=='\r')){
           total_read =  start+spot+2;
@@ -152,6 +154,9 @@ int add_headderbuff(
        
     }
     regfree(&reghead);
+    if(moreheads){
+      return -1;
+    }
     return total_read;
   
 }

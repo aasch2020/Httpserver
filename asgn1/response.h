@@ -1,5 +1,13 @@
 typedef struct Response Response;
 
-Response *response_create(char *type, char *uri, int vernum, int verdec);
+Response *response_create(int type);
 
 void response_delete(Response **r);
+
+void addheaderres(Request *r, char *header_keyin, char *header_valin);
+
+void response_delete(Response **r);
+
+void write_nofile(Response *r, int connec);
+
+void write_file(Response *r, int filewrt, int connec);

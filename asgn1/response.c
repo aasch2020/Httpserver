@@ -52,7 +52,7 @@ Response *
     r->numheads = 0;
 }
 
-void addheader(Request *r, char *header_keyin, char *header_valin) {
+void addheaderres(Request *r, char *header_keyin, char *header_valin) {
     printf("%s\n", header_keyin);
     printf("%s\n", header_valin);
     printf("%d\n", r->numheads);
@@ -77,12 +77,15 @@ void response_delete(Response **r) {
     free(*r);
 }
 
+void write_nofile(Response *r, int connec){
+}
+
 void write_file(Response *r, int filewrt, int connec) {
     stat(filewrt, r->filestat);
     char writebuf[2048];
     bodylen += r->filestat->off_t;
     char wrtstr = wrt[32];
-    addheader(r, "Content-Length", itoa(bodylen), 10);
+    addheaderres(r, "Content-Length", itoa(bodyleni, 10));
     unsigned int written = 0;
     int readin = 0;
     while (written != bodylen) {
