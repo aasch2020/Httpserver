@@ -19,7 +19,7 @@ int main(){
    //   int processed = 0;
     //   ssize_t byteget = 0;
     Request *test = request_create("GET", "/foo.txt", 1, 1);
-    char requests[]= "foo: bar\r\nfoos: baas\r\nno: wa\r\nlast: one\r\n\r\ndont: match";
+    char requests[]= "foo: bar\r\nfoos: baas\r\nno: wa\r\nlast: one\r\nContent-Length: 12\r\n\r\ndont: match";
     int total = add_headderbuff(test, requests, 0, strlen(requests));
     print_req(test); 
     printf("%s", requests+total);

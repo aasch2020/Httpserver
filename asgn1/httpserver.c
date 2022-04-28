@@ -73,14 +73,16 @@ void handle_connection(int connfd) {
         printf("loop top\n");
 
         if (4 != sscanf(buffer, "%8[a-zA-Z] %20s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
-	    proced = strlen(req) + strlen(uri) + 10; 
+	 
             printf("invalid request 1 \n");
         } else {
+   proced = strlen(req) + strlen(uri) + 10; 
             got = request_create(req, uri, vernum, verdec);
-            
+             print_req(got); 
 	    int headread = add_headderbuff(got, buffer, proced, bytez);
 	    while(headread == -1){
-	      while(((subbytes = read(connfd, buffer, BUF_SIZE)) > 0) && (headread == -1)){
+	      while((headread == -1) && ((subbytes = read(connfd, buffer, BUF_SIZE)) > 0)){
+		printf("reading extra\n");
 	        headread = add_headderbuff(got, buffer, 0, subbytes);
 	      }
 	    }

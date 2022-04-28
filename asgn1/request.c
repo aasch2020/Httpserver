@@ -39,7 +39,7 @@ void request_delete(Request **r) {
 void add_header(Request *r, char *header_total) {
     printf("%s\n", header_total);
     int len = strlen(header_total);
-    printf("%s, length is %d\n", header_total, len);
+    printf("%s, thee length is %d\n", header_total, len);
     char* header_keyin = (char*)calloc(len, sizeof(char)); 
     char* header_valin =  (char*)calloc(len, sizeof(char));  
     sscanf(header_total, "%[^':']: %[^'\r']", header_keyin, header_valin);
@@ -122,7 +122,7 @@ const char *get_uri(Request *r) {
     return r->uri;
 }
 int add_headderbuff(
-    Request *r, char *buff, int start, int end) {
+    Request *r, char *buff, int start,  int end) {
     regex_t reghead;
     char* matchstr;
     int lenmatch;
@@ -133,7 +133,7 @@ int add_headderbuff(
     bool moreheads = false;
     regcomp(&reghead, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     regmatch_t regs[1];
-    while(0 == regexec(&reghead, buff + start+spot, 1, regs, REG_NOTEOL)){
+    while(0 == regexec(&reghead, buff + start + spot, 1, regs, REG_NOTEOL)){
        nummatch++;
        lenmatch = regs->rm_eo - regs->rm_so;
 //       printf("%d\n", lenmatch);
