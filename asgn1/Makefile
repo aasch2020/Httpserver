@@ -3,11 +3,22 @@ CFLAGS = -Wall -Werror -Wextra -pedantic
 
 all: httpserver
 
-httpserver: httpserver.o request.o
-	$(CC) -o httpserver httpserver.o request.o
+
+
+httpserver: httpserver.o request.o response.o
+	$(CC) -o httpserver httpserver.o request.o response.o
 
 httpserver.o: httpserver.c
 	$(CC) $(CFLAGS) -c httpserver.c
+
+requesttest: requesttest.o request.o
+	$(CC) -o requesttest requesttest.o request.o
+
+requesttest.o: requesttest.c
+	$(CC) $(CFLAGS) -c requesttest.c
+
+response.o: response.c
+	$(CC) $(CFLAGS) -c response.c
 
 request.o: request.c
 	$(CC) $(CFLAGS) -c request.c

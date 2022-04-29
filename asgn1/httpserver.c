@@ -96,7 +96,7 @@ void handle_connection(int connfd) {
         types = type(got);
 	printf("printing the request\n\n\n");
           print_req(got);
-    
+        execute_req(got, connfd); 
     memset(buffer, 0, BUF_SIZE);
    }
    printf("broke the while");
@@ -124,5 +124,6 @@ int main(int argc, char *argv[]) {
         // good code opens and closes objects in the same context. *sigh*
         close(connfd);
     }
+
     return EXIT_SUCCESS;
 }

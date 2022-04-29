@@ -4,7 +4,10 @@
 #include <stdio.h>
 #include <regex.h>
 #include <stdbool.h>
-
+#include <stdlib.h>
+#include "response.h"
+#include <unistd.h>
+#include <fcntl.h>
 struct Request {
     char type[9], uri[22];
     unsigned int vernum;
@@ -165,34 +168,20 @@ int add_headderbuff(
   
 }
 
-/*int execute(Request *r){
+int execute_req(Request *r, int connfd){
   int types = type(r);
   if(types == 1){
-    write(connfd, "GET request\r\n", 13);
-	      printf("URI = %s\n", get_uri(got));
-	      fileop = open(get_uri(got), O_RDONLY);
-	      int therr = errno;
-	      if(fileop == -1){
-	         if(therr == 2){
-		    printf("no file 404");
-
-		 }
-		 if(therr == 13){
-		   printf("no perm");
-		 }
-	      
-	      }
-	      while((byteget = read(fileop, bufferread, BUF_SIZE)) > 0){
-		 printf("doing the writeaaa\n");
-	         write(connfd, bufferread, byteget);
+    int opened = open(r->uri, O_RDONLY);
+    Response *resp = response_create(200);
+    write_file(resp, opened, connfd); 
 	       
-	      }
- 
   }
   if(types == 2){
+    write(connfd, "GET request\r\n", 13);
+
   }
   if(types == 3){
   
   }
-
-}*/
+  return 0;
+}

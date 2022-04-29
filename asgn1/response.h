@@ -4,7 +4,7 @@ Response *response_create(int type);
 
 void response_delete(Response **r);
 
-void addheaderres(Request *r, char *header_keyin, char *header_valin);
+void addheaderres(Response *r, char *header_keyin, char *header_valin);
 
 void response_delete(Response **r);
 

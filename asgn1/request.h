@@ -15,4 +15,6 @@ int validate(Request *r);
 
 int type(Request *r);
 
+int execute_req(Request *r, int connfd);
+
 const char *get_uri(Request *r);
