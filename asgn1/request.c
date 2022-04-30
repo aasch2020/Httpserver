@@ -16,18 +16,21 @@ struct Request {
     char **header_vals;
     int numheads;
 };
-
-Request *request_create(char *type, char *uri, int vernum, int verdec) {
-    Request *r = (Request *) calloc(1, sizeof(Request));
+Request *request_create( char *type, char *uri, int vernum, int verdec){
+  Request *r = (Request *) calloc(1, sizeof(Request));
+     r->header_key = (char **) calloc(30, sizeof(char *));
+    r->header_vals = (char **) calloc(30, sizeof(char *));
     printf("uri when given is%s\n", uri);
     strncpy(r->type, type, 8);
-    strncpy(r->uri, uri, 22);
+    strncpy(r->uri, uri, 21);
     r->vernum = vernum;
     r->verdec = verdec;
-    r->numheads = 0;
-    r->header_key = (char **) calloc(30, sizeof(char *));
-    r->header_vals = (char **) calloc(30, sizeof(char *));
-    return r;
+
+    r->numheads = 0;  
+    
+ r->numheads = 0;
+
+  return r;  
 }
 
 void request_delete(Request **r) {
@@ -44,8 +47,8 @@ void add_header(Request *r, char *header_total) {
     printf("%s\n", header_total);
     int len = strlen(header_total);
     printf("%s, thee length is %d\n", header_total, len);
-    char *header_keyin = (char *) calloc(len, sizeof(char));
-    char *header_valin = (char *) calloc(len, sizeof(char));
+    char *header_keyin = (char *) calloc(len + 1, sizeof(char));
+    char *header_valin = (char *) calloc(len + 1, sizeof(char));
     sscanf(header_total, "%[^':']: %[^'\r']", header_keyin, header_valin);
     r->header_key[r->numheads] = header_keyin;
     r->header_vals[r->numheads] = header_valin;
@@ -137,10 +140,11 @@ int add_headderbuff(
     ssize_t spot = 0;
     bool moreheads = true;
     regcomp(&reghead, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
-    regmatch_t regs[1];
-    while (0 == regexec(&reghead, buff + start + spot, 1, regs, REG_NOTEOL)) {
+    regmatch_t regs;
+    while (0 == regexec(&reghead, buff + start + spot, 1, &regs, REG_NOTEOL) ) {
+   
         nummatch++;
-        lenmatch = regs->rm_eo - regs->rm_so;
+        lenmatch = regs.rm_eo - regs.rm_so;
         printf(" match point is%d\n", lenmatch);
         matchstr = strndup(buff + start + spot, lenmatch);
         //      printf("%s\n", matchstr);
@@ -172,7 +176,8 @@ int execute_req(Request *r, int connfd) {
         int resptype = 200; 
         Response *resp = response_create(resptype);
         write_file(resp, opened, connfd);
-        
+       response_delete(&resp);
+
     }
     if (types == 2) {
         write(connfd, "GET request\r\n", 13);
@@ -180,4 +185,5 @@ int execute_req(Request *r, int connfd) {
     if (types == 3) {
     }
     return 0;
+   
 }

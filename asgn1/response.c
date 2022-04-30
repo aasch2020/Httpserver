@@ -7,13 +7,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 struct Response {
-    char statphrase[30];
+    char statphrase[31];
     char **header_key;
     char **header_vals;
     char *msgbody;
     int numheads;
     int type;
-    char httpver[8];
+    char httpver[9];
     unsigned int bodylen;
 };
 
@@ -66,9 +66,9 @@ break;
 }
 
 void addheaderres(Response *r, char *header_keyin, char *header_valin) {
-    printf("%s\n", header_keyin);
-    printf("%s\n", header_valin);
-    printf("%d\n", r->numheads);
+//    printf("%s\n", header_keyin);
+//    printf("%s\n", header_valin);
+//    printf("%d\n", r->numheads);
     r->header_key[r->numheads] = strdup(header_keyin);
     r->header_vals[r->numheads] = strdup(header_valin);
     r->numheads += 1;
@@ -80,7 +80,7 @@ void addheaderres(Response *r, char *header_keyin, char *header_valin) {
     }
 }
 void response_delete(Response **r) {
-    for (int i = 0; i < ((*r)->numheads); i++) {
+    for (int i = 0; i <= ((*r)->numheads); i++) {
         free((*r)->header_key[i]);
         free((*r)->header_vals[i]);
     }
@@ -91,8 +91,8 @@ void response_delete(Response **r) {
 }
 
 void writeresp(Response *r, int connec){
-   int len = strlen(r->httpver)+strlen(r->statphrase) +6; 
-   char* writebuf = (char*)calloc(len, sizeof(char));
+   int len = strlen(r->httpver)+strlen(r->statphrase) +7; 
+   char* writebuf = (char*)calloc(len + 1, sizeof(char));
    sprintf(writebuf, "%s %d %s",r->httpver, r->type, r->statphrase);
    write(connec, writebuf, len);
    for(int i = 0; i < r->numheads; i++){
@@ -102,7 +102,7 @@ void writeresp(Response *r, int connec){
 
    }
    write(connec, "\r\n\r\n", 4);
-
+   free(writebuf);
 }
 
 void write_file(Response *r, int filewrt, int connec) {
@@ -121,7 +121,7 @@ void write_file(Response *r, int filewrt, int connec) {
         check = check / 10;
         lengthofstrint++;
     }
-    char *thebody = (char *) calloc(lengthofstrint, sizeof(char));
+    char *thebody = (char *) calloc(lengthofstrint + 1, sizeof(char));
     sprintf(thebody, "%zd", bodylen);
     printf("the length of the body is %zd\n", bodylen);
     addheaderres(r, "Content-Length", thebody);
@@ -132,4 +132,5 @@ void write_file(Response *r, int filewrt, int connec) {
         readin = read(filewrt, writebuf, 2048);
         written += write(connec, writebuf, readin);
     }
+    free(thebody);
 }

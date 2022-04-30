@@ -51,16 +51,17 @@ int create_listen_socket(uint16_t port) {
 
 #define BUF_SIZE 4096
 void handle_connection(int connfd) {
-    char buffer[BUF_SIZE];
+    char buffer[BUF_SIZE] = {'\0'};
     // char bufferread[BUF_SIZE];
     //  char headbuff[BUF_SIZE];
     ssize_t bytez = 0;
     //   int processed = 0;
     //   ssize_t byteget = 0;
-    char req[8], uri[22];
+    char req[8] = {'\0'};
+    char  uri[22] = {'\0'};
     uri[0] = '.';
     //  int totalread;
-    unsigned int vernum, verdec;
+    unsigned int vernum = 0, verdec = 0;
     // ssize_t readin = 0;
     int validates, types /*, fileop*/;
     // int allheads = 0;
@@ -68,34 +69,39 @@ void handle_connection(int connfd) {
     int subbytes;
     /// read all bytes from connfd un:Wq
     //til we see an error or EOF
-    Request *got = NULL;
+    Request *got;
+    int headread = -1;
     while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
         printf("loop top\n");
 
-        if (4 != sscanf(buffer, "%[a-zA-Z] %s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
+        if (4 != sscanf(buffer, "%8[a-zA-Z] %22s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
 
             printf("invalid request 1 \n");
         } else {
 	    printf("the uri is%s\n", uri);
             proced = strlen(req) + strlen(uri) + 10;
-            got = request_create(req, uri, vernum, verdec);
+            got = request_create( req, uri, vernum, verdec);
 
-            int headread = add_headderbuff(got, buffer, proced, bytez);
+            headread = add_headderbuff(got, buffer, proced, bytez);
             printf("%d\n", headread);
             while (headread == -1) {
+               printf("in the header loop");
                 while ((headread == -1) && ((subbytes = read(connfd, buffer, BUF_SIZE)) > 0)) {
                     printf("reading extra\n");
                     headread = add_headderbuff(got, buffer, 0, subbytes);
                 }
             }
             print_req(got);
-        }
+        
         validates = validate(got);
 
         types = type(got);
         printf("printing the request\n\n\n"); 
         execute_req(got, connfd);
         memset(buffer, 0, BUF_SIZE);
+    request_delete(&got);
+
+	}
     }
     printf("broke the while");
     (void) connfd;
