@@ -13,6 +13,7 @@ struct Response {
     char *msgbody;
     int numheads;
     int type;
+    char httpver[8];
     unsigned int bodylen;
 };
 
@@ -20,6 +21,7 @@ Response *response_create(int type) {
     Response *r = (Response *) calloc(1, sizeof(Response));
     printf("the type is %d\n", type);
     r->type = type;
+strcpy(r->httpver, "HTTP/1.1");
     switch (type) {
 
     case 200:
@@ -88,13 +90,28 @@ void response_delete(Response **r) {
     free(*r);
 }
 
+void writeresp(Response *r, int connec){
+   int len = strlen(r->httpver)+strlen(r->statphrase) +6; 
+   char* writebuf = (char*)calloc(len, sizeof(char));
+   sprintf(writebuf, "%s %d %s",r->httpver, r->type, r->statphrase);
+   write(connec, writebuf, len);
+   for(int i = 0; i < r->numheads; i++){
+     write(connec, r->header_key[i], strlen( r->header_key[i]));
+     write(connec, ": ", 2);
+     write(connec, r->header_vals[i], strlen( r->header_vals[i]));
+
+   }
+   write(connec, "\r\n\r\n", 4);
+
+}
+
 void write_file(Response *r, int filewrt, int connec) {
     struct stat filestat;
     fstat(filewrt, &filestat);
     char writebuf[2048];
-    sprintf(writebuf, "%d %s", r->type, r->statphrase);
-     
-    write(connec, writebuf, strlen(writebuf));
+ //   sprintf(writebuf, "%s %d %s",r->httpver, r->type, r->statphrase);
+    
+  //  write(connec, writebuf, strlen(writebuf));
     ssize_t bodylen = 0;
     bodylen += filestat.st_size;
     //    tathar wrtstr[32];
@@ -108,6 +125,7 @@ void write_file(Response *r, int filewrt, int connec) {
     sprintf(thebody, "%zd", bodylen);
     printf("the length of the body is %zd\n", bodylen);
     addheaderres(r, "Content-Length", thebody);
+    writeresp(r, connec);
     int written = 0;
     int readin = 0;
     while (written != bodylen) {
