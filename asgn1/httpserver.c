@@ -53,17 +53,17 @@ int create_listen_socket(uint16_t port) {
 void handle_connection(int connfd) {
     char buffer[BUF_SIZE];
     // char bufferread[BUF_SIZE];
-  //  char headbuff[BUF_SIZE];
+    //  char headbuff[BUF_SIZE];
     ssize_t bytez = 0;
     //   int processed = 0;
     //   ssize_t byteget = 0;
     char req[8], uri[22];
     uri[0] = '.';
-  //  int totalread;
+    //  int totalread;
     unsigned int vernum, verdec;
-   // ssize_t readin = 0;
+    // ssize_t readin = 0;
     int validates, types /*, fileop*/;
-   // int allheads = 0;
+    // int allheads = 0;
     int proced = 0;
     int subbytes;
     /// read all bytes from connfd un:Wq
@@ -73,34 +73,32 @@ void handle_connection(int connfd) {
         printf("loop top\n");
 
         if (4 != sscanf(buffer, "%[a-zA-Z] %s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
-	 
+
             printf("invalid request 1 \n");
         } else {
-   proced = strlen(req) + strlen(uri) + 10; 
+	    printf("the uri is%s\n", uri);
+            proced = strlen(req) + strlen(uri) + 10;
             got = request_create(req, uri, vernum, verdec);
-           
-	    int headread = add_headderbuff(got, buffer, proced, bytez);
-	    printf("%d\n", headread);
-	    while(headread == -1){
-	      while((headread == -1) && ((subbytes = read(connfd, buffer, BUF_SIZE)) > 0)){
-		printf("reading extra\n");
-	        headread = add_headderbuff(got, buffer, 0, subbytes);
-	      }
-	    }
-	    print_req(got);
 
-	    
-	}
+            int headread = add_headderbuff(got, buffer, proced, bytez);
+            printf("%d\n", headread);
+            while (headread == -1) {
+                while ((headread == -1) && ((subbytes = read(connfd, buffer, BUF_SIZE)) > 0)) {
+                    printf("reading extra\n");
+                    headread = add_headderbuff(got, buffer, 0, subbytes);
+                }
+            }
+            print_req(got);
+        }
         validates = validate(got);
 
         types = type(got);
-	printf("printing the request\n\n\n");
-          print_req(got);
-        execute_req(got, connfd); 
-    memset(buffer, 0, BUF_SIZE);
-   }
-   printf("broke the while");
-(void) connfd;
+        printf("printing the request\n\n\n"); 
+        execute_req(got, connfd);
+        memset(buffer, 0, BUF_SIZE);
+    }
+    printf("broke the while");
+    (void) connfd;
 }
 int main(int argc, char *argv[]) {
     int listenfd;
