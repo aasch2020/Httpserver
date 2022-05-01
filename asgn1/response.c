@@ -22,6 +22,11 @@ Response *response_create(int type) {
     printf("the type is %d\n", type);
     r->type = type;
 strcpy(r->httpver, "HTTP/1.1");
+   r->numheads = 0;
+ r->header_key = (char **) calloc(30, sizeof(char *));
+    r->header_vals = (char **) calloc(30, sizeof(char *));
+
+
     switch (type) {
 
     case 200:
@@ -61,10 +66,7 @@ addheaderres(r, "Content-Length", "10");
         strcpy(r->msgbody, "OK\n");
     break;
     }
-    r->header_key = (char **) calloc(30, sizeof(char *));
-    r->header_vals = (char **) calloc(30, sizeof(char *));
-    r->numheads = 0;
-    return r;
+       return r;
 }
 
 void addheaderres(Response *r, char *header_keyin, char *header_valin) {

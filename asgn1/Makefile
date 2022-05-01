@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -Wall -Werror -Wextra -pedantic 
+CFLAGS = -Wall -Werror -Wextra -pedantic -g
 
 all: httpserver
 
@@ -24,7 +24,7 @@ request.o: request.c
 	$(CC) $(CFLAGS) -c request.c
 
 clean:
-	rm -f httpserver httpserver.o request.o
+	rm -f httpserver *.o
 
 format:
 	clang-format -i -style=file *.[ch]
