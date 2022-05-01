@@ -1,5 +1,6 @@
 #include "request.h"
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <regex.h>
@@ -16,20 +17,18 @@ struct Request {
     char **header_vals;
     int numheads;
 };
-Request *request_create( char *type, char *uri, int vernum, int verdec){
-  Request *r = (Request *) calloc(1, sizeof(Request));
-     r->header_key = (char **) calloc(30, sizeof(char *));
-    r->header_vals = (char **) calloc(30, sizeof(char *));
-    printf("uri when given is%s\n", uri);
-    strncpy(r->type, type, 8);
-    strncpy(r->uri, uri, 21);
-    r->vernum = vernum;
-    r->verdec = verdec;
+Request *request_create( char *match){
+    Request *r = (Request *) calloc(1, sizeof(Request));
+    r->uri[0] = '.';
+    sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri+1, &(r->vernum), &(r->verdec));
 
+
+    r->header_key = (char **) calloc(30, sizeof(char *));
+    r->header_vals = (char **) calloc(30, sizeof(char *));
     r->numheads = 0;  
     
  r->numheads = 0;
-
+  print_req(r);
   return r;  
 }
 
@@ -132,13 +131,17 @@ int add_headderbuff(
     Request *r, char *buff, int start, int end) {
     printf("add headder from buffer\n");
     regex_t reghead;
+    if(start == end){
+      printf("need read more\n");
+      return -1; 
+}
     char *matchstr;
-    int lenmatch;
+    int lenmatch = 0;
     int nummatch = 0;
     int total_read = 0;
     //    int prevmatchend = start;
     ssize_t spot = 0;
-    bool moreheads = true;
+    bool moreheads = false;
     regcomp(&reghead, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     regmatch_t regs;
     while (0 == regexec(&reghead, buff + start + spot, 1, &regs, REG_NOTEOL) ) {
@@ -148,12 +151,17 @@ int add_headderbuff(
         printf(" match point is%d\n", lenmatch);
         matchstr = strndup(buff + start + spot, lenmatch);
         //      printf("%s\n", matchstr);
-        add_header(r, matchstr);
-        spot += lenmatch;
+        printf("the end is,%ld the last is,%d\n", spot+start, end);
+ spot += lenmatch;
+        printf("\n\nwhaoo the thing at the end the thingy whoa is\n\n %s\n\n\n", buff+start+spot);
+add_header(r, matchstr);
+       
         free(matchstr);
+  printf("the spot and start is this%ld, %dread all\n", spot + start, end);
+
         if (spot + start == end) {
             break;
-            printf("%ld, %dread all\n", spot + start, end);
+            printf("the spot and start is this%ld, %dread all\n", spot + start, end);
             moreheads = true;
         }
         if ((*(buff + start + spot) == '\r') && (*(buff + start + spot) == '\r')) {
@@ -173,6 +181,19 @@ int execute_req(Request *r, int connfd) {
     if (types == 1) {
 	printf("doing a get req");
         int opened = open(r->uri, O_RDONLY);
+    //     int error = errno;
+        if(opened == -1){
+          if(errno == EACCES){
+             Response *errrep = response_create(403);
+             writeresp(errrep, connfd);
+             return 1;
+           }
+         if(errno == ENOENT){
+           Response *errrep = response_create(404);
+            writeresp(errrep, connfd);
+return 1 ;
+           }
+        }
         int resptype = 200; 
         Response *resp = response_create(resptype);
         write_file(resp, opened, connfd);

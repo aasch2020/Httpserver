@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <regex.h>
 #include "request.h"
+#include "response.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -57,11 +58,11 @@ void handle_connection(int connfd) {
     ssize_t bytez = 0;
     //   int processed = 0;
     //   ssize_t byteget = 0;
-    char req[8] = {'\0'};
+//    char req[8] = {'\0'};
     char  uri[22] = {'\0'};
     uri[0] = '.';
     //  int totalread;
-    unsigned int vernum = 0, verdec = 0;
+ //   unsigned int vernum = 0, verdec = 0;
     // ssize_t readin = 0;
     int validates, types /*, fileop*/;
     // int allheads = 0;
@@ -71,19 +72,30 @@ void handle_connection(int connfd) {
     //til we see an error or EOF
     Request *got;
     int headread = -1;
+    regex_t regstatus;
+    char* statmatch;
+    int lenmatch = 0;
+    regmatch_t regmatches;
+    regcomp(&regstatus, "[a-z, A-Z]{1,8}[ ]+[/][a-zA-Z0-9._]{1,18}[ ]+[H][T][T][P][/][0-9][.][0-9]", REG_EXTENDED);
     while ((bytez = read(connfd, buffer, BUF_SIZE)) > 0) {
-        printf("loop top\n");
-
-        if (4 != sscanf(buffer, "%8[a-zA-Z] %22s HTTP/%u.%u", req, uri + 1, &vernum, &verdec)) {
-
+        printf("loop top %s\n", buffer);
+            
+        if (0 != regexec(&regstatus, buffer, 1, &regmatches, REG_NOTEOL)) {
+                        
             printf("invalid request 1 \n");
         } else {
-	    printf("the uri is%s\n", uri);
-            proced = strlen(req) + strlen(uri) + 10;
-            got = request_create( req, uri, vernum, verdec);
-
+            lenmatch = regmatches.rm_eo - regmatches.rm_so;
+            
+            printf("the lenmatc is%d\n", lenmatch);
+            statmatch = strndup(buffer + regmatches.rm_so, lenmatch);
+              
+	    printf("the match is%s\n", statmatch);
+            
+            proced = regmatches.rm_eo + 2;
+            got = request_create(statmatch);
+            printf("procedd %d bytez %zd\n", proced, bytez);
             headread = add_headderbuff(got, buffer, proced, bytez);
-            printf("%d\n", headread);
+            printf("the header of read is the %d\n", headread);
             while (headread == -1) {
                printf("in the header loop");
                 while ((headread == -1) && ((subbytes = read(connfd, buffer, BUF_SIZE)) > 0)) {
@@ -97,13 +109,15 @@ void handle_connection(int connfd) {
 
         types = type(got);
         printf("printing the request\n\n\n"); 
+        print_req(got);
         execute_req(got, connfd);
         memset(buffer, 0, BUF_SIZE);
-    request_delete(&got);
+        request_delete(&got);
 
 	}
     }
-    printf("broke the while");
+
+    printf("broke the while\n");
     (void) connfd;
 }
 int main(int argc, char *argv[]) {

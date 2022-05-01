@@ -1,7 +1,7 @@
 typedef struct Request Request;
 
-Request *request_create();
-Request *request_update( Request *r, char *type, char *uri, int vernum, int verdec);
+Request *request_create(char *match);
+
 
 void request_delete(Request **r);
 

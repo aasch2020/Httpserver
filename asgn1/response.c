@@ -41,12 +41,14 @@ break;
     case 403:
         strcpy(r->statphrase, "Forbidden\r\n");
         r->msgbody = (char *) calloc(13, sizeof(char));
-        strcpy(r->msgbody, "OK\n");
+        addheaderres(r, "Content-Length", "10");
+        strcpy(r->msgbody, "Forbidden\n");
    break;
     case 404:
         strcpy(r->statphrase, "Not Found\r\n");
         r->msgbody = (char *) calloc(20, sizeof(char));
-        strcpy(r->msgbody, "OK\n");
+addheaderres(r, "Content-Length", "10");
+        strcpy(r->msgbody, "Not Found\n");
    break;
     case 500:
         strcpy(r->statphrase, "Internal Server Error\r\n");
@@ -101,7 +103,9 @@ void writeresp(Response *r, int connec){
      write(connec, r->header_vals[i], strlen( r->header_vals[i]));
 
    }
+   
    write(connec, "\r\n\r\n", 4);
+   write(connec, r->msgbody, strlen(r->msgbody));
    free(writebuf);
 }
 
