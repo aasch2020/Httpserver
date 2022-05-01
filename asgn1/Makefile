@@ -7,6 +7,10 @@ all: httpserver
 
 httpserver: httpserver.o request.o response.o
 	$(CC) -o httpserver httpserver.o request.o response.o
+sockdem: sockdem.o
+	$(CC) -o sockdem sockdem.o
+sockdem.o: sockdem.c
+	$(CC) $(CFLAGS) -c sockdem.c
 
 httpserver.o: httpserver.c
 	$(CC) $(CFLAGS) -c httpserver.c

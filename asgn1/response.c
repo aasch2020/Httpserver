@@ -21,58 +21,58 @@ Response *response_create(int type) {
     Response *r = (Response *) calloc(1, sizeof(Response));
     printf("the type is %d\n", type);
     r->type = type;
-strcpy(r->httpver, "HTTP/1.1");
-   r->numheads = 0;
- r->header_key = (char **) calloc(30, sizeof(char *));
+    strcpy(r->httpver, "HTTP/1.1");
+    r->numheads = 0;
+    r->header_key = (char **) calloc(30, sizeof(char *));
     r->header_vals = (char **) calloc(30, sizeof(char *));
-
 
     switch (type) {
 
     case 200:
-	    printf("switch case 1\n");
-	    strcpy(r->statphrase, "OK\r\n"); r->msgbody = (char *) calloc(3, sizeof(char));
-            break;
+        printf("switch case 1\n");
+        strcpy(r->statphrase, "OK\r\n");
+        r->msgbody = (char *) calloc(3, sizeof(char));
+        break;
     case 201:
         strcpy(r->statphrase, "Created\r\n");
         r->msgbody = (char *) calloc(10, sizeof(char));
         strcpy(r->msgbody, "OK\n");
-break;
+        break;
     case 400:
         strcpy(r->statphrase, "Bad Request\r\n");
         r->msgbody = (char *) calloc(11, sizeof(char));
         strcpy(r->msgbody, "OK\n");
-  break;
+        break;
     case 403:
         strcpy(r->statphrase, "Forbidden\r\n");
         r->msgbody = (char *) calloc(13, sizeof(char));
         addheaderres(r, "Content-Length", "10");
         strcpy(r->msgbody, "Forbidden\n");
-   break;
+        break;
     case 404:
         strcpy(r->statphrase, "Not Found\r\n");
         r->msgbody = (char *) calloc(20, sizeof(char));
-addheaderres(r, "Content-Length", "10");
+        addheaderres(r, "Content-Length", "10");
         strcpy(r->msgbody, "Not Found\n");
-   break;
+        break;
     case 500:
         strcpy(r->statphrase, "Internal Server Error\r\n");
         r->msgbody = (char *) calloc(20, sizeof(char));
         strcpy(r->msgbody, "OK\n");
-   break;
+        break;
     case 501:
         strcpy(r->statphrase, "Not Implemented\r\n");
         r->msgbody = (char *) calloc(20, sizeof(char));
         strcpy(r->msgbody, "OK\n");
-    break;
+        break;
     }
-       return r;
+    return r;
 }
 
 void addheaderres(Response *r, char *header_keyin, char *header_valin) {
-//    printf("%s\n", header_keyin);
-//    printf("%s\n", header_valin);
-//    printf("%d\n", r->numheads);
+    //    printf("%s\n", header_keyin);
+    //    printf("%s\n", header_valin);
+    //    printf("%d\n", r->numheads);
     r->header_key[r->numheads] = strdup(header_keyin);
     r->header_vals[r->numheads] = strdup(header_valin);
     r->numheads += 1;
@@ -94,30 +94,29 @@ void response_delete(Response **r) {
     free(*r);
 }
 
-void writeresp(Response *r, int connec){
-   int len = strlen(r->httpver)+strlen(r->statphrase) +7; 
-   char* writebuf = (char*)calloc(len + 1, sizeof(char));
-   sprintf(writebuf, "%s %d %s",r->httpver, r->type, r->statphrase);
-   write(connec, writebuf, len);
-   for(int i = 0; i < r->numheads; i++){
-     write(connec, r->header_key[i], strlen( r->header_key[i]));
-     write(connec, ": ", 2);
-     write(connec, r->header_vals[i], strlen( r->header_vals[i]));
+void writeresp(Response *r, int connec) {
+    int len = strlen(r->httpver) + strlen(r->statphrase) + 7;
+    char *writebuf = (char *) calloc(len + 1, sizeof(char));
+    sprintf(writebuf, "%s %d %s", r->httpver, r->type, r->statphrase);
+    write(connec, writebuf, len);
+    for (int i = 0; i < r->numheads; i++) {
+        write(connec, r->header_key[i], strlen(r->header_key[i]));
+        write(connec, ": ", 2);
+        write(connec, r->header_vals[i], strlen(r->header_vals[i]));
+    }
 
-   }
-   
-   write(connec, "\r\n\r\n", 4);
-   write(connec, r->msgbody, strlen(r->msgbody));
-   free(writebuf);
+    write(connec, "\r\n\r\n", 4);
+    write(connec, r->msgbody, strlen(r->msgbody));
+    free(writebuf);
 }
 
 void write_file(Response *r, int filewrt, int connec) {
     struct stat filestat;
     fstat(filewrt, &filestat);
     char writebuf[2048];
- //   sprintf(writebuf, "%s %d %s",r->httpver, r->type, r->statphrase);
-    
-  //  write(connec, writebuf, strlen(writebuf));
+    //   sprintf(writebuf, "%s %d %s",r->httpver, r->type, r->statphrase);
+
+    //  write(connec, writebuf, strlen(writebuf));
     ssize_t bodylen = 0;
     bodylen += filestat.st_size;
     //    tathar wrtstr[32];
