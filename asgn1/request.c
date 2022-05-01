@@ -170,14 +170,18 @@ int add_headderbuff(
         }
         if ((*(buff + start + spot) == '\r') && (*(buff + start + spot) == '\r')) {
             total_read = start + spot + 2;
-            printf("breaking right");
+            printf("breaking right\n");
+            moreheads = false;
         }
     }
     regfree(&reghead);
-    if (spot + start == end) {
+    if (moreheads) {
+        printf("\n\nreturnng to read more\n\n");
         return -1;
+    }else{
+        printf("\n\ndone reading\n\n");
+        return total_read;
     }
-    return total_read;
 }
 
 int execute_get(Request *r, int connfd) {

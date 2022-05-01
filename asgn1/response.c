@@ -95,7 +95,7 @@ void response_delete(Response **r) {
 }
 
 void writeresp(Response *r, int connec) {
-    int len = strlen(r->httpver) + strlen(r->statphrase) + 7;
+    int len = strlen(r->httpver) + strlen(r->statphrase) + 5;
     char *writebuf = (char *) calloc(len + 1, sizeof(char));
     sprintf(writebuf, "%s %d %s", r->httpver, r->type, r->statphrase);
     write(connec, writebuf, len);

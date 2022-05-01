@@ -112,8 +112,9 @@ void handle_connection(int connfd) {
             printf("printing the request\n\n\n");
             if(types == 1){
                 execute_get(got, connfd);
+                printf("executed the get request\n");
              }else if(types == 2){
-                      execute_put(got, connfd, buffer, proced, bytez);
+                  execute_put(got, connfd, buffer, proced, bytez);
                }
               
             print_req(got);
