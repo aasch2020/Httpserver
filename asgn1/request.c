@@ -131,17 +131,17 @@ const char *get_uri(Request *r) {
 }
 int add_headderbuff(
 
-    Request *r, char *buff, int start, int end) {
+    Request *r, char *buff, int start, int end, int *proced) {
     printf("add headder from buffer\n");
     regex_t reghead;
     if (start == end) {
         printf("need read more\n");
         return -1;
     }
+    int nummatch = 0;
     char *matchstr;
     int lenmatch = 0;
-    int nummatch = 0;
-    int total_read = 0;
+      int total_read = 0;
     //    int prevmatchend = start;
     ssize_t spot = 0;
     bool moreheads = false;
@@ -151,6 +151,7 @@ int add_headderbuff(
 
         nummatch++;
         lenmatch = regs.rm_eo - regs.rm_so;
+        *proced += lenmatch;
         printf(" match point is%d\n", lenmatch);
         matchstr = strndup(buff + start + spot, lenmatch);
         //      printf("%s\n", matchstr);
@@ -216,52 +217,67 @@ int execute_get(Request *r, int connfd) {
 }
 int execute_put(Request *r, int connfd, char* buffer, int start, int end){
    printf( "PUT request\n");
-        int created = 0;
+        bool created = true;
         int opened = open(r->uri, O_CREAT|O_EXCL|O_WRONLY, 0666);
         if(opened == -1){
+           printf("not openend right\n");
            if (errno == EEXIST) {
-             created = 0;
+             printf("the swag thing\n");
+             created = false; 
              opened = open(r->uri, O_WRONLY);
              if(opened == -1){
               if (errno == EACCES) {
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
                 return 1;
-            }
+              }
   
-             
-             } 
-             }else{
-             if (errno == EACCES) {
+            }
+           }
+           if (errno == EACCES) {
+                printf("bad access somehow\n");
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
                 return 1;
-            }
-
-             }
-           
-        }else{
+            }             
+        }
           bool readfrombuf = false;
           if(start != end){
              readfrombuf = true;
           }
-          if(start - end >= r->content_len){
-            write(opened, buffer, r->content_len);
-            return 0;
-          }
-          int writed = 0;
+          
+          int remain  = end - start;
+          printf("the buff %d the write%d\n", start - end, r->content_len);
+          if(remain >= r->content_len){
+            printf("written loop 1\n");
+            write(opened, buffer + start, r->content_len);
+               
+          }else{
+          if(end - start != 0){
+             write(opened, buffer + start, end - start); 
+          } 
+          int writed = end - start;
+          
           char bufftwo[2048];
           int readed;
-          while(writed <= r->content_len){
+          while(writed <= r->content_len){ 
+           printf("in the write loop\n");
            readed = read(connfd, buffer, 2048);
             write(opened, bufftwo, readed);
             printf("buffer");
             writed+=readed;
+         
          }
+       } 
+        
+         if(!created){
+Response *resp = response_create(201);
+           writeresp(resp, connfd);
+        }else{
+         Response *resp = response_create(200);
+           writeresp(resp, connfd);
+ 
          }
-    return 1;
-
     
-    }
-    
-
+ return 0;   
+}

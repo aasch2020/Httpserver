@@ -75,6 +75,7 @@ void handle_connection(int connfd) {
     regex_t regstatus;
     char *statmatch;
     int lenmatch = 0;
+//    int headreadin = 0;
     regmatch_t regmatches;
     regcomp(&regstatus, "[a-z, A-Z]{1,8}[ ]+[/][a-zA-Z0-9._]{1,18}[ ]+[H][T][T][P][/][0-9][.][0-9]",
         REG_EXTENDED);
@@ -95,15 +96,17 @@ void handle_connection(int connfd) {
             proced = regmatches.rm_eo + 2;
             got = request_create(statmatch);
             printf("procedd %d bytez %zd\n", proced, bytez);
-            headread = add_headderbuff(got, buffer, proced, bytez);
+            headread = add_headderbuff(got, buffer, proced, bytez, &proced);
             printf("the header of read is the %d\n", headread);
+            proced = headread;
             while (headread == -1) {
                 printf("in the header loop");
                 while ((headread == -1) && ((subbytes = read(connfd, buffer, BUF_SIZE)) > 0)) {
                     printf("reading extra\n");
-                    headread = add_headderbuff(got, buffer, 0, subbytes);
+                    headread = add_headderbuff(got, buffer, 0, subbytes, &proced);
                 }
             }
+            printf("porocessed after heads %d, all after %zd\n", proced, bytez);
             print_req(got);
 
             validates = validate(got);
