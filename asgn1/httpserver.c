@@ -83,7 +83,8 @@ void handle_connection(int connfd) {
         printf("loop top %s\n", buffer);
 
         if (0 != regexec(&regstatus, buffer, 1, &regmatches, REG_NOTEOL)) {
-
+            Response *invresp = response_create(400);
+            writeresp(invresp, connfd);
             printf("invalid request 1 \n");
         } else {
             lenmatch = regmatches.rm_eo - regmatches.rm_so;

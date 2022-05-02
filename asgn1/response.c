@@ -42,8 +42,10 @@ Response *response_create(int type) {
         break;
     case 400:
         strcpy(r->statphrase, "Bad Request\r\n");
-        r->msgbody = (char *) calloc(11, sizeof(char));
-        strcpy(r->msgbody, "OK\n");
+        r->msgbody = (char *) calloc(12, sizeof(char));
+  addheaderres(r, "Content-Length", "12");
+
+        strcpy(r->msgbody, "Bad Request\n");
         break;
     case 403:
         strcpy(r->statphrase, "Forbidden\r\n");
@@ -102,7 +104,7 @@ void writeresp(Response *r, int connec) {
     char *writebuf = (char *) calloc(len + 1, sizeof(char));
     sprintf(writebuf, "%s %d %s", r->httpver, r->type, r->statphrase);
     write(connec, writebuf, len);
-    if((r->type = 200) && (r->numheads == 0)){
+    if((r->type == 200) && (r->numheads == 0)){
      addheaderres(r, "Content-Length", "3");
     strcpy(r->msgbody, "Ok\n");
 
