@@ -281,3 +281,70 @@ Response *resp = response_create(201);
     
  return 0;   
 }
+
+int execute_appen(Request *r, int connfd, char* buffer, int start, int end){
+   printf( "appen request\n");
+        bool created = true;
+        int opened = open(r->uri, O_CREAT|O_EXCL|O_WRONLY, 0666);
+        if(opened == -1){
+           printf("not openend right\n");
+           if (errno == EEXIST) {
+             printf("the swag thing\n");
+             created = false; 
+             opened = open(r->uri, O_WRONLY);
+             if(opened == -1){
+              if (errno == EACCES) {
+                Response *errrep = response_create(403);
+                writeresp(errrep, connfd);
+                return 1;
+              }
+  
+            }
+           }
+           if (errno == EACCES) {
+                printf("bad access somehow\n");
+                Response *errrep = response_create(403);
+                writeresp(errrep, connfd);
+                return 1;
+            }             
+        }
+          bool readfrombuf = false;
+          if(start != end){
+             readfrombuf = true;
+          }
+          
+          int remain  = end - start;
+          printf("the buff %d the write%d\n", start - end, r->content_len);
+          if(remain >= r->content_len){
+            printf("written loop 1\n");
+            write(opened, buffer + start, r->content_len);
+               
+          }else{
+          if(end - start != 0){
+             write(opened, buffer + start, end - start); 
+          } 
+          int writed = end - start;
+          
+          char bufftwo[2048];
+          int readed;
+          while(writed <= r->content_len){ 
+           printf("in the write loop\n");
+           readed = read(connfd, buffer, 2048);
+            write(opened, bufftwo, readed);
+            printf("buffer");
+            writed+=readed;
+         
+         }
+       } 
+        
+         if(!created){
+Response *resp = response_create(201);
+           writeresp(resp, connfd);
+        }else{
+         Response *resp = response_create(200);
+           writeresp(resp, connfd);
+ 
+         }
+    
+ return 0;   
+}

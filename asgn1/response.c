@@ -32,7 +32,6 @@ Response *response_create(int type) {
         printf("switch case 1\n");
         strcpy(r->statphrase, "OK\r\n");
         r->msgbody = (char *) calloc(3, sizeof(char));
-strcpy(r->msgbody, "Ok\n");
        
  break;
     case 201:
@@ -90,6 +89,7 @@ void response_delete(Response **r) {
     for (int i = 0; i <= ((*r)->numheads); i++) {
         free((*r)->header_key[i]);
         free((*r)->header_vals[i]);
+
     }
     free((*r)->msgbody);
     free((*r)->header_vals);
@@ -104,7 +104,8 @@ void writeresp(Response *r, int connec) {
     write(connec, writebuf, len);
     if((r->type = 200) && (r->numheads == 0)){
      addheaderres(r, "Content-Length", "3");
-    
+    strcpy(r->msgbody, "Ok\n");
+
 }
     for (int i = 0; i < r->numheads; i++) {
         write(connec, r->header_key[i], strlen(r->header_key[i]));
