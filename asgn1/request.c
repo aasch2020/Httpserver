@@ -260,11 +260,11 @@ int execute_put(Request *r, int connfd, char* buffer, int start, int end){
           
           char bufftwo[2048];
           int readed;
-          while(writed <= r->content_len){ 
-           printf("in the write loop\n");
-           readed = read(connfd, buffer, 2048);
+          while(writed < r->content_len){ 
+         //  printf("in the write loop written %d, need to writed %d\n");
+           readed = read(connfd, bufftwo, 2048);
             write(opened, bufftwo, readed);
-            printf("buffer");
+            printf("%s", bufftwo);
             writed+=readed;
          
          }
@@ -329,7 +329,7 @@ int execute_appen(Request *r, int connfd, char* buffer, int start, int end){
           int readed;
           while(writed <= r->content_len){ 
            printf("in the write loop\n");
-           readed = read(connfd, buffer, 2048);
+           readed = read(connfd, bufftwo, 2048);
             write(opened, bufftwo, readed);
             printf("buffer");
             writed+=readed;
