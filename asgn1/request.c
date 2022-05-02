@@ -195,11 +195,14 @@ int execute_get(Request *r, int connfd) {
             if (errno == EACCES) {
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
+              response_delete(&errrep);
                 return 1;
             }
             if (errno == ENOENT) {
                 Response *errrep = response_create(404);
                 writeresp(errrep, connfd);
+                   response_delete(&errrep);
+
                 return 1;
             }
         }
@@ -225,12 +228,14 @@ int execute_append(Request *r, int connfd, char* buffer, int start, int end){
                    printf("bad access somehow\n");
                 Response *errrep = response_create(404);
                 writeresp(errrep, connfd);
+                response_delete(&errrep);
                 return 1;
      }
            if (errno == EACCES) {
                 printf("bad access somehow\n");
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
+   response_delete(&errrep);
                 return 1;
             }             
         }
@@ -261,15 +266,17 @@ int execute_append(Request *r, int connfd, char* buffer, int start, int end){
             writed+=readed;
          
          }
+         
        } 
-        
+       close(opened);
          if(!created){
 Response *resp = response_create(201);
            writeresp(resp, connfd);
+   response_delete(&resp);
         }else{
          Response *resp = response_create(200);
            writeresp(resp, connfd);
- 
+    response_delete(&resp);
          }
     
  return 0;   
@@ -289,6 +296,7 @@ int execute_put(Request *r, int connfd, char* buffer, int start, int end){
               if (errno == EACCES) {
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
+   response_delete(&errrep);
                 return 1;
               }
   
@@ -298,6 +306,7 @@ int execute_put(Request *r, int connfd, char* buffer, int start, int end){
                 printf("bad access somehow\n");
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
+   response_delete(&errrep);
                 return 1;
             }             
         }
@@ -332,7 +341,7 @@ int execute_put(Request *r, int connfd, char* buffer, int start, int end){
         
         Response *resp = response_create(200);
            writeresp(resp, connfd);
- 
+        response_delete(&resp);
          
     
  return 0;   

@@ -50,6 +50,27 @@ int create_listen_socket(uint16_t port) {
     return listenfd;
 }
 
+int read_somechar(int connfd, int numtoread, char* check){
+   int readed = 0;
+   char* buffer = (char*)calloc(numtoread, sizeof(char));
+   while(readed < numtoread){
+     readed += read(connfd, buffer + readed, numtoread - readed);
+   }
+   printf("%s\n", buffer);
+   if(0 == strcmp(buffer,check)){
+     printf("checked to 1");
+     free(buffer);
+     return 1;
+    }else{
+      free(buffer);
+      return 0;
+
+    }
+  
+
+}
+
+
 #define BUF_SIZE 4096
 void handle_connection(int connfd) {
     char buffer[BUF_SIZE] = { '\0' };
@@ -76,6 +97,7 @@ void handle_connection(int connfd) {
     char *statmatch;
     int lenmatch = 0;
 //    int headreadin = 0;
+  //  int readin = 0;
     regmatch_t regmatches;
     regcomp(&regstatus, "[a-z, A-Z]{1,8}[ ]+[/][a-zA-Z0-9._]{1,18}[ ]+[H][T][T][P][/][0-9][.][0-9]",
         REG_EXTENDED);
@@ -85,17 +107,28 @@ void handle_connection(int connfd) {
         if (0 != regexec(&regstatus, buffer, 1, &regmatches, REG_NOTEOL)) {
             Response *invresp = response_create(400);
             writeresp(invresp, connfd);
-            printf("invalid request 1 \n");
+            response_delete(&invresp);
+            printf("aaaaaaaaaaaaaaaaaaaaaaaaaa invalid request 1 \n");
         } else {
             lenmatch = regmatches.rm_eo - regmatches.rm_so;
-
+           
             printf("the lenmatc is%d\n", lenmatch);
             statmatch = strndup(buffer + regmatches.rm_so, lenmatch);
+ proced = regmatches.rm_eo;
 
-            printf("the match is%s\n", statmatch);
-
-            proced = regmatches.rm_eo + 2;
-            got = request_create(statmatch);
+            printf("the match is%s proced is%d bytez is %zd\n", statmatch, proced, bytez);
+                  
+            if(proced == bytez){
+              int inv = read_somechar(connfd, 2, "\r\n");
+              if(inv == 1){
+                 proced +=2;
+              }else{
+                printf("badreq\n");
+                break;
+               }       
+            } 
+        
+                       got = request_create(statmatch);
             printf("procedd %d bytez %zd\n", proced, bytez);
             headread = add_headderbuff(got, buffer, proced, bytez, &proced);
             printf("the header of read is the %d\n", headread);
