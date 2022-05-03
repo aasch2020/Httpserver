@@ -70,7 +70,7 @@ int hcreadstart(
     //    int endofmatch = 0;
     char *statmatch;
     int lenmatch = 0;
-    int startofmatch = 0;
+//    int startofmatch = 0;
 
     while (readed < toread) {
         readcur = read(connfd, readbuff + readed, toread - readed);
@@ -81,13 +81,14 @@ int hcreadstart(
         }
         printf("thiswhile\n");
         readed += readcur;
-        if (regexec(&regm, readbuff, 1, &regs, 0) == 0) {
-            printf("wematched\n");
+         printf("readbuff %s", readbuff);
+        if (0 == regexec(&regm, readbuff, 1, &regs, 0)) {
+            printf("wematchedstat\n");
             lenmatch = regs.rm_eo - regs.rm_so;
-            printf("%d to here %dwematched\n", regs.rm_so, lenmatch);
-            startofmatch = regs.rm_eo - regs.rm_so;
+            printf("%d to here %dwematched\n", regs.rm_so, regs.rm_eo);
+         //   startofmatch = regs.rm_eo - regs.rm_so;
             statmatch = strndup(readbuff + regs.rm_so, lenmatch);
-            printf("%s\n", statmatch);
+            printf("the string we matched is%s\n", statmatch);
             request_update(r, statmatch);
             if (regs.rm_eo != readed) {
                 strncpy(outbuffer, readbuff + regs.rm_eo, readed - regs.rm_eo);
@@ -116,7 +117,7 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
     regex_t regm;
     //  regex_t done;
     int prevend = 0;
-    if(inbuffer[0] == '\0' && inbuffer[1] == '\0'){
+    if(inbuffer[0] == '\r' && inbuffer[1] == '\n'){
         return 0;
      }
     regcomp(&regm, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
@@ -158,7 +159,7 @@ printf("badend parsed = %d\n", *parsed);
  trackwhere +=regs.rm_eo;
 
     }
-    printf("what the fuck\n");
+    printf("no matches?\n");
     *parsed += trackwhere;
     return 1;
 }
