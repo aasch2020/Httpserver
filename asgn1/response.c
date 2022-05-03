@@ -32,8 +32,8 @@ Response *response_create(int type) {
         printf("switch case 1\n");
         strcpy(r->statphrase, "OK\r\n");
         r->msgbody = (char *) calloc(3, sizeof(char));
-       
- break;
+
+        break;
     case 201:
         strcpy(r->statphrase, "Created\r\n");
         r->msgbody = (char *) calloc(10, sizeof(char));
@@ -43,7 +43,7 @@ Response *response_create(int type) {
     case 400:
         strcpy(r->statphrase, "Bad Request\r\n");
         r->msgbody = (char *) calloc(12, sizeof(char));
-  addheaderres(r, "Content-Length", "12");
+        addheaderres(r, "Content-Length", "12");
 
         strcpy(r->msgbody, "Bad Request\n");
         break;
@@ -93,7 +93,6 @@ void response_delete(Response **r) {
     for (int i = 0; i <= ((*r)->numheads); i++) {
         free((*r)->header_key[i]);
         free((*r)->header_vals[i]);
-
     }
     free((*r)->msgbody);
     free((*r)->header_vals);
@@ -106,11 +105,10 @@ void writeresp(Response *r, int connec) {
     char *writebuf = (char *) calloc(len + 1, sizeof(char));
     sprintf(writebuf, "%s %d %s", r->httpver, r->type, r->statphrase);
     write(connec, writebuf, len);
-    if((r->type == 200) && (r->numheads == 0)){
-     addheaderres(r, "Content-Length", "3");
-    strcpy(r->msgbody, "Ok\n");
-
-}
+    if ((r->type == 200) && (r->numheads == 0)) {
+        addheaderres(r, "Content-Length", "3");
+        strcpy(r->msgbody, "Ok\n");
+    }
     for (int i = 0; i < r->numheads; i++) {
         write(connec, r->header_key[i], strlen(r->header_key[i]));
         write(connec, ": ", 2);

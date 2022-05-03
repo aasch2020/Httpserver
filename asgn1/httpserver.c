@@ -50,36 +50,56 @@ int create_listen_socket(uint16_t port) {
     return listenfd;
 }
 
-int read_somechar(int connfd, int numtoread, char* check){
-   int readed = 0;
-   char* buffer = (char*)calloc(numtoread, sizeof(char));
-   while(readed < numtoread){
-     readed += read(connfd, buffer + readed, numtoread - readed);
-   }
-   printf("%s\n", buffer);
-   if(0 == strcmp(buffer,check)){
-     printf("checked to 1");
-     free(buffer);
-     return 1;
-    }else{
-      free(buffer);
-      return 0;
-
+int read_somechar(int connfd, int numtoread, char *check) {
+    int readed = 0;
+    char *buffer = (char *) calloc(numtoread, sizeof(char));
+    while (readed < numtoread) {
+        readed += read(connfd, buffer + readed, numtoread - readed);
     }
-  
-
+    printf("%s\n", buffer);
+    if (0 == strcmp(buffer, check)) {
+        printf("checked to 1");
+        free(buffer);
+        return 1;
+    } else {
+        free(buffer);
+        return 0;
+    }
 }
-void handle_connection(int connfd){
-  while(1){
-    Request *r =  request_create();
-    if(hcreadstart(r, connfd) == -1){
-       break; 
-   
-    }   
+void handle_connection(int connfd) {
+    int fromend = 0;
+    int altrend = 0;
+    char onebuff[2048] = { '\0' };
+    char twobuff[2048] = { '\0' };
 
-    
-  } 
-  (void)connfd;
+    while (1) {
+        Request *r = request_create();
+        if (hcreadstart(r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
+            printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
+            break;
+        }
+        printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
+        if (-1 == headreadstart(r, connfd, altrend, &fromend, twobuff, onebuff)) {
+            break;
+        }
+        printf("overreadvalue = %d %s %s\n", fromend, onebuff, twobuff);
+        fflush(stdout);
+        int typed = type(r);
+        print_req(r);
+        switch (typed) {
+        case 1: execute_get(r, connfd); break;
+        case 2:
+            // execute_put(r, connfd);
+            break;
+        case 3:
+            // execute_append(r, connfd);
+            break;
+        case 4: printf("badreq"); break;
+        case 0: printf("unimp req"); break;
+        }
+    }
+    printf("\n");
+    (void) connfd;
 }
 
 /*#define BUF_SIZE 4096
