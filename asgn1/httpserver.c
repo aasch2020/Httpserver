@@ -111,10 +111,9 @@ void handle_connection(int connfd) {
             printf("aaaaaaaaaaaaaaaaaaaaaaaaaa invalid request 1 \n");
         } else {
             lenmatch = regmatches.rm_eo - regmatches.rm_so;
-           
-            printf("the lenmatc is%d\n", lenmatch);
+                 printf("the lenmatc is%d\n", lenmatch);
             statmatch = strndup(buffer + regmatches.rm_so, lenmatch);
- proced = regmatches.rm_eo;
+            proced = regmatches.rm_eo;
 
             printf("the match is%s proced is%d bytez is %zd\n", statmatch, proced, bytez);
                   
@@ -122,19 +121,30 @@ void handle_connection(int connfd) {
               int inv = read_somechar(connfd, 2, "\r\n");
               if(inv == 1){
                  proced +=2;
+                 
               }else{
                 printf("badreq\n");
                 break;
-               }       
+               } 
+      bytez = 0;
+      proced = 0;      
             } 
-        
-                       got = request_create(statmatch);
+            
+            got = request_create(statmatch);
+       validates = validate(got);
+            if(validates == 2){
+              Response *invresp = response_create(501);
+              writeresp(invresp, connfd);
+              response_delete(&invresp);
+            
+            }
+
             printf("procedd %d bytez %zd\n", proced, bytez);
             headread = add_headderbuff(got, buffer, proced, bytez, &proced);
             printf("the header of read is the %d\n", headread);
             proced = headread;
             while (headread == -1) {
-                printf("in the header loop");
+                printf("in the header loop\n");
                 while ((headread == -1) && ((subbytes = read(connfd, buffer, BUF_SIZE)) > 0)) {
                     printf("reading extra\n");
                     headread = add_headderbuff(got, buffer, 0, subbytes, &proced);
@@ -143,7 +153,7 @@ void handle_connection(int connfd) {
             printf("porocessed after heads %d, all after %zd\n", proced, bytez);
             print_req(got);
 
-            validates = validate(got);
+           
 
             types = type(got);
             printf("printing the request\n\n\n");

@@ -129,13 +129,77 @@ int type(Request *r) {
 const char *get_uri(Request *r) {
     return r->uri;
 }
+
+/*int read_somechar(int connfd, int numtoread, char* check){
+   int readed = 0;
+   char* buffer = (char*)calloc(numtoread, sizeof(char));
+   while(readed < numtoread){
+     readed += read(connfd, buffer + readed, numtoread - readed);
+   }
+   printf("%s\n", buffer);
+   if(0 == strcmp(buffer,check)){
+     printf("checked to 1");
+     free(buffer);
+     return 1;
+    }else{
+      free(buffer);
+      return 0;
+
+    }
+  
+
+}*/
+
+
+/*int add_headderbuff(
+
+    Request *r, char *buff, int start, int end, int *proced) {
+    printf("add headder from buffer the start is %d  the end %d is\n", start, end);
+    regex_t reghead;
+    if (start == end) {
+        printf("need read more cut it at the topppp\n");
+        return -1;
+    }
+    int nummatch = 0;
+    char *matchstr;
+    int lenmatch = 0;
+      int total_read = 0;
+    //    int prevmatchend = start;
+    ssize_t spot = 0;
+    bool moreheads = false;
+    regcomp(&reghead, "[!-~]+[:][ ]+[!-~]+", REG_EXTENDED);
+    regmatch_t regs;
+    while (0 == regexec(&reghead, buff + start + spot, 1, &regs, REG_NOTEOL)) {
+        nummatch++;
+        lenmatch = regs.rm_eo - regs.rm_so;
+        *proced += lenmatch;
+        printf(" match point is%d\n", lenmatch);
+        matchstr = strndup(buff + start + spot, lenmatch);
+        //      printf("%s\n", matchstr);
+        printf("the end is,%ld the last is,%d\n", spot + start, end);
+        spot += lenmatch;
+        printf(
+            "\n\nwhaoo the thing at the end the thingy whoa is\n\n %s\n\n\n", buff + start + spot);
+        add_header(r, matchstr);
+
+        free(matchstr);
+        printf("the spot and start is this%ld, %dread all\n", spot + start, end);
+
+
+   
+
+    }
+    
+
+
+}*/
 int add_headderbuff(
 
     Request *r, char *buff, int start, int end, int *proced) {
-    printf("add headder from buffer\n");
+    printf("add headder from buffer the start is %d  the end %d is\n", start, end);
     regex_t reghead;
     if (start == end) {
-        printf("need read more\n");
+        printf("need read more cut it at the topppp\n");
         return -1;
     }
     int nummatch = 0;
@@ -167,6 +231,7 @@ int add_headderbuff(
         if (spot + start == end) {
             break;
             printf("the spot and start is this%ld, %dread all\n", spot + start, end);
+            printf("YOU NEED TO READ MORE HEADERS\n");
             moreheads = true;
         }
         if ((*(buff + start + spot) == '\r') && (*(buff + start + spot) == '\r')) {
