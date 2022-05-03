@@ -124,11 +124,21 @@ void handle_connection(int connfd) {
                  
               }else{
                 printf("badreq\n");
+ Response *invresp = response_create(400);
+            writeresp(invresp, connfd);
+            response_delete(&invresp);
+            
                 break;
                } 
       bytez = 0;
       proced = 0;      
-            } 
+            }else{
+             printf("the match is%s\n", statmatch);
+
+            proced = regmatches.rm_eo + 2;
+            got = request_create(statmatch);
+
+             } 
             
             got = request_create(statmatch);
        validates = validate(got);

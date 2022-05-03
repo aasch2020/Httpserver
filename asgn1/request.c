@@ -41,7 +41,7 @@ void request_delete(Request **r) {
     free((*r)->header_key);
     free(*r);
 }
-
+//void read 
 void add_header(Request *r, char *header_total) {
     printf("addin the header from%s\n", header_total);
     int len = strlen(header_total);
