@@ -64,7 +64,7 @@ void handle_connection(int connfd) {
 
 
   /// read all bytes from connfd until we see an error or EOF
-  while ((bytez = read(connfd, buffer, 5)) > 0) {
+  while ((bytez = read(connfd, buffer, 1)) > 0) {
     ssize_t bytez_written = 0, curr_write = 0;
 
     while (bytez_written < bytez) {

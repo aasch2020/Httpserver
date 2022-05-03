@@ -17,19 +17,26 @@ struct Request {
     char **header_vals;
     int numheads;
     int content_len;
+    bool badreq;
 };
-Request *request_create(char *match) {
+Request *request_create() {
     Request *r = (Request *) calloc(1, sizeof(Request));
-    r->uri[0] = '.';
-    sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri + 1, &(r->vernum), &(r->verdec));
-
     r->header_key = (char **) calloc(30, sizeof(char *));
     r->header_vals = (char **) calloc(30, sizeof(char *));
     r->numheads = 0;
     r->content_len = -1;
     r->numheads = 0;
-    print_req(r);
+   r->badreq = false;
+    
     return r;
+}
+
+void *request_update(Request *r, char* match){
+    r->uri[0] = '.';
+    sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri + 1, &(r->vernum), &(r->verdec));
+
+print_req(r);
+
 }
 
 void request_delete(Request **r) {
@@ -41,7 +48,96 @@ void request_delete(Request **r) {
     free((*r)->header_key);
     free(*r);
 }
-//void read 
+int hcreadstart(Request *r,  int connfd){
+    int toread = 37;
+    regex_t regm;
+    regex_t done;
+    regcomp(&regm, "[a-z, A-Z]{1,8}[ ][/][a-zA-Z0-9._]{1,19}[ ][H][T][T][P][/][0-9][.][0-9]", REG_EXTENDED);  
+    regcomp(&done, "[\r][\n]", REG_EXTENDED|REG_NOSUB);
+    regmatch_t regs;
+    char readbuff[38];
+    int readed = 0;
+    int readcur = 0;
+    bool found = false;
+//    int endofmatch = 0; 
+    int lenmatch = 0;
+    int startofmatch = 0;
+    while(readed < toread){
+      readcur = read(connfd, readbuff, toread - readed);
+      if(readcur == 0){
+        regfree(&regm);
+        return -1;
+      }
+      readed += readcur;
+      if(regexec(&regm, readbuff, 1, &regs, REG_NOTEOL)){
+         lenmatch = regs.rm_eo - regs.rm_so;
+         startofmatch = regs.rm_eo - regs.rm_so;
+         lenmatch = regmatches.rm_eo - regmatches.rm_so;
+         statmatch = strndup(buffer + regmatches.rm_so, lenmatch);
+               
+         found = true;
+         return 1;
+      
+      }
+      if(regexec(&done, readbuff, 0, NULL, 0)){
+        r->badreq = true;
+        found = false;
+        return 0;
+      }
+      
+
+    }
+    return -2;
+      
+
+}
+
+/*int godreadstart(Request *r, char* buffer, char* returned, int connfd, bool bufin, char* regtocomp, int start, int * end, int toread){
+    regex_t regm;
+    regetx_t done;
+    regcomp(&regm, regtocomp, REG_EXTENDED);
+    regcomp(&done, "[\r][\n][\r][\n]", REG_EXTENDED);
+    regmatch_t regs;
+    bool reqdone = false;
+    char readbuff[2048];
+    strncpy(readbuff, buffer, 2048);
+    int readed = 0;
+    int readcur = 0;
+    bool found = false;
+    int endofmatch = 0;
+    int startofmatch = 0;
+    while(readed < toread){
+      readcur = read(connfd, readbuff + start, toread - readed);
+      if(readcur == 0){
+        regfree(&regm);
+        return -1;
+      }
+      readed += readcur;
+      if(regexec(&regm, readbuff, 1, &regs, REG_NOTEOL)){
+         lenmatch = regs.rm_eo - regs.rm_so;
+         startofmatch = regs.rm_eo - regs.rm_so;
+         found = true;
+         break;
+      
+      }
+      if(regexec(&done, readbuff, 1, NULL, REG_NOTEOL)){
+} 
+      
+      
+
+    }
+    if(found){
+      strncpy(returned, readbuff + regs.rm_so, lenmatch);
+      *end = regs.rem_eo;
+      strncpy(buffer, readbuff, 2048
+      return 1;
+    }else{
+      return 0;
+    }
+    
+
+}
+*/
 void add_header(Request *r, char *header_total) {
     printf("addin the header from%s\n", header_total);
     int len = strlen(header_total);
@@ -393,12 +489,12 @@ int execute_put(Request *r, int connfd, char* buffer, int start, int end){
           int writed = end - start;
           
           char bufftwo[2048];
-          int readed;
+          int readed  = 0;
           while(writed < r->content_len){ 
          //  printf("in the write loop written %d, need to writed %d\n");
-           readed = read(connfd, bufftwo, 2048);
+            readed = read(connfd, bufftwo, 2048);
             write(opened, bufftwo, readed);
-            printf("%s", bufftwo);
+           // printf("%s", bufftwo);
             writed+=readed;
          
          }

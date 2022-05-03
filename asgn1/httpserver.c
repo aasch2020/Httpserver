@@ -69,9 +69,20 @@ int read_somechar(int connfd, int numtoread, char* check){
   
 
 }
+void handle_connection(int connfd){
+  while(1){
+    Request *r =  request_create();
+    if(hcreadstart(r, connfd) == -1){
+       break; 
+   
+    }   
 
+    
+  } 
+  (void)connfd;
+}
 
-#define BUF_SIZE 4096
+/*#define BUF_SIZE 4096
 void handle_connection(int connfd) {
     char buffer[BUF_SIZE] = { '\0' };
     // char bufferread[BUF_SIZE];
@@ -85,7 +96,7 @@ void handle_connection(int connfd) {
     //  int totalread;
     //   unsigned int vernum = 0, verdec = 0;
     // ssize_t readin = 0;
-    int validates, types /*, fileop*/;
+    int validates, types , fileop;
     // int allheads = 0;
     int proced = 0;
     int subbytes;
@@ -187,7 +198,7 @@ void handle_connection(int connfd) {
 
     printf("broke the while\n");
     (void) connfd;
-}
+}*/
 int main(int argc, char *argv[]) {
     int listenfd;
     uint16_t port;

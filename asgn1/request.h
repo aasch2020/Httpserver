@@ -1,9 +1,9 @@
 typedef struct Request Request;
 
-Request *request_create(char *match);
+Request *request_create();
 
 void request_delete(Request **r);
-
+int hcreadstart(Request *r,  int connfd);
 void add_header(Request *r, char *header_total);
 
 int add_headderbuff(Request *r, char *buff, int start, int end, int* proced);

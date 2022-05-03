@@ -67,6 +67,8 @@ Response *response_create(int type) {
     case 501:
         strcpy(r->statphrase, "Not Implemented\r\n");
         r->msgbody = (char *) calloc(20, sizeof(char));
+        addheaderres(r, "Content-Length", "20");
+
         strcpy(r->msgbody, "Not Implemented\n");
         break;
     }
