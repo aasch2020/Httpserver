@@ -14,7 +14,7 @@ int add_headderbuff(Request *r, char *buff, int start, int end, int *proced);
 void print_req(Request *r);
 
 int validate(Request *r);
-int execute_append(Request *r, int connfd, char *buffer, int start, int end);
+int execute_append(Request *r, int connfd,  char *buffer, int *fromend, char* writtenfrombuf, int inbufsize);
 
 int type(Request *r);
 int execute_put(Request *r, int connfd, char *buffer, int start, int end);
