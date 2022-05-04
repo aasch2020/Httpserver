@@ -29,7 +29,7 @@ Request *request_create() {
     r->content_len = -1;
     r->numheads = 0;
     r->badreq = false;
-   r->resptype = 0;
+    r->resptype = 0;
     return r;
 }
 void request_badflag(Request *r) {
@@ -38,7 +38,7 @@ void request_badflag(Request *r) {
 void request_update(Request *r, char *match) {
     r->uri[0] = '.';
     //  r->thetotalhead = strndup(match, 40);
-  printf("update req;");
+    printf("update req;");
     sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri + 1, &(r->vernum), &(r->verdec));
 
     print_req(r);
@@ -65,7 +65,7 @@ int hcreadstart(
     regcomp(&done, "[\r][\n]", REG_EXTENDED | REG_NOSUB);
     regmatch_t regs;
     regmatch_t enma;
-    char readbuff[2048] = {'\0'};
+    char readbuff[2048] = { '\0' };
     strncpy(readbuff, inbuffer, 40);
     int readed = inbufsize;
     int readcur = 0;
@@ -73,11 +73,10 @@ int hcreadstart(
     //    int endofmatch = 0;
     char *statmatch;
     int lenmatch = 0;
-//    int startofmatch = 0;
-  //  if(inbufsize > toread){
-       
-       
-  //  }
+    //    int startofmatch = 0;
+    //  if(inbufsize > toread){
+
+    //  }
     while (readed < toread) {
         readcur = read(connfd, readbuff + readed, toread - readed);
         if (readcur == 0) {
@@ -87,12 +86,12 @@ int hcreadstart(
         }
         printf("thiswhile\n");
         readed += readcur;
-         printf("readbuff %s", readbuff);
+        printf("readbuff %s", readbuff);
         if (0 == regexec(&regm, readbuff, 1, &regs, 0)) {
             printf("wematchedstat\n");
             lenmatch = regs.rm_eo - regs.rm_so;
             printf("%d to here %dwematched\n", regs.rm_so, regs.rm_eo);
-         //   startofmatch = regs.rm_eo - regs.rm_so;
+            //   startofmatch = regs.rm_eo - regs.rm_so;
             statmatch = strndup(readbuff + regs.rm_so, lenmatch);
             printf("the string we matched is%s\n", statmatch);
             request_update(r, statmatch);
@@ -103,7 +102,7 @@ int hcreadstart(
             found = true;
             return 1;
         }
-        if (0  == regexec(&done, readbuff, 1, &enma, 0)) {
+        if (0 == regexec(&done, readbuff, 1, &enma, 0)) {
             printf("eolfound\n");
             r->badreq = true;
             found = false;
@@ -125,9 +124,9 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
     regex_t regm;
     //  regex_t done;
     int prevend = 0;
-    if(inbuffer[0] == '\r' && inbuffer[1] == '\n'){
+    if (inbuffer[0] == '\r' && inbuffer[1] == '\n') {
         return 0;
-     }
+    }
     regcomp(&regm, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     //    regcomp(&done, "[\r][\n][\r][\r]", REG_EXTENDED|REG_NOSUB);
     regmatch_t regs;
@@ -138,12 +137,13 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
     printf("the read in = %s\n", inbuffer);
     while (regexec(&regm, inbuffer + trackwhere, 1, &regs, 0) == 0) {
         lenmatch = regs.rm_eo - regs.rm_so;
-               printf("On header? %d to here %dwematched\n", regs.rm_eo, regs.rm_so);
+        printf("On header? %d to here %dwematched\n", regs.rm_eo, regs.rm_so);
         //   startofmatch = regs.rm_eo - regs.rm_so;
 
         statmatch = strndup(inbuffer + regs.rm_so + trackwhere, lenmatch);
         add_header(r, statmatch);
-        if ((*(inbuffer + trackwhere + regs.rm_eo)) == '\r' && (*(inbuffer + trackwhere + regs.rm_eo + 1)) == '\n') {
+        if ((*(inbuffer + trackwhere + regs.rm_eo)) == '\r'
+            && (*(inbuffer + trackwhere + regs.rm_eo + 1)) == '\n') {
             *parsed += regs.rm_eo + trackwhere + 2;
             printf("we found the end\n");
             return 0;
@@ -152,20 +152,17 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
             printf("the string %s flagging bad %d vs %d\n", statmatch, regs.rm_so, prevend);
             request_badflag(r);
         }
-        printf("the in buffer + the regs is %s the end\n", inbuffer + trackwhere );
+        printf("the in buffer + the regs is %s the end\n", inbuffer + trackwhere);
         prevend = regs.rm_eo;
-        if (regs.rm_eo + trackwhere  == inbufsize) {
+        if (regs.rm_eo + trackwhere == inbufsize) {
             printf("we hit the end badly parsed\n");
 
             *parsed += regs.rm_eo;
-printf("badend parsed = %d\n", *parsed);
+            printf("badend parsed = %d\n", *parsed);
             return 1;
         }
-        
 
-
- trackwhere +=regs.rm_eo;
-
+        trackwhere += regs.rm_eo;
     }
     printf("no matches?\n");
     *parsed += trackwhere;
@@ -176,13 +173,13 @@ int headreadstart(
     Request *r, int connfd, int inbufsize, int *fromend, char *inbuffer, char *outbuffer) {
     int toread = 2048;
     regex_t regm;
- int parser = 0;
+    int parser = 0;
 
     //    regex_t done;
     regcomp(&regm, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     //    regcomp(&done, "[\r][\n][\r][\r]", REG_EXTENDED|REG_NOSUB);
     //  regmatch_t regs;
-    char readbuff[2080] = {'\0'};
+    char readbuff[2080] = { '\0' };
     int readed = 0;
     printf("the length %lu %d\n", strlen(inbuffer), inbufsize);
     strncpy(readbuff, inbuffer, inbufsize);
@@ -194,10 +191,10 @@ int headreadstart(
     //   char* statmatch;
     //    int lenmatch = 0;
     //  int startofmatch = 0;
-       while (readed < toread || !found) {
+    while (readed < toread || !found) {
         readcur = read(connfd, readbuff + readed, toread - readed);
         printf("toread - readed = %d\n", toread - readed);
-//  parser = 0;
+        //  parser = 0;
 
         printf("the amount of characters read = %d\n", readcur);
         if (readcur == 0) {
@@ -205,8 +202,8 @@ int headreadstart(
             printf("path 11\n");
             return -1;
         }
-   //     readbuff[readed] = '\0';
-              printf("the thing i read in%s\n", readbuff);
+        //     readbuff[readed] = '\0';
+        printf("the thing i read in%s\n", readbuff);
         printf("thiswhile1 parsed is %d, %d\n", parser, readcur);
         readed += readcur;
         printf("readbuff + parsed is %s\n", readbuff);
@@ -223,7 +220,7 @@ int headreadstart(
 }
 
 void add_header(Request *r, char *header_total) {
-        printf("addin the header from%s\n", header_total);
+    printf("addin the header from%s\n", header_total);
     int len = strlen(header_total);
     //    printf("%s, thee length is %d\n", header_total, len);
 
@@ -313,8 +310,6 @@ const char *get_uri(Request *r) {
     return r->uri;
 }
 
-
-
 int execute_get(Request *r, int connfd) {
     int types = type(r);
     if (types == 1) {
@@ -349,86 +344,87 @@ int execute_get(Request *r, int connfd) {
     }
     return 0;
 }
-int execute_append(Request *r, int connfd, char *buffer, int* fromend, char* writtenfrombuf, int inbufsize) {
+int execute_append(
+    Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize) {
     printf("PUT request\n");
- //   bool created = true;
+    //   bool created = true;
     int resptype = 0;
     int opened = open(r->uri, O_WRONLY | O_APPEND);
     if (opened == -1) {
         printf("not openend right\n");
         if (errno == ENOENT) {
-           resptype = 404;
-    //       return 1;
+            resptype = 404;
+            //       return 1;
         }
         if (errno == EACCES) {
             printf("bad access somehow\n");
-           resptype = 403;
-      //     return 1;
+            resptype = 403;
+            //     return 1;
         }
-     int writed = 0;
-     if(inbufsize >= r->content_len){
-        
-        writed = r->content_len;
-         strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
-        *fromend = inbufsize - r->content_len;
-                        
-    }else{
-    int totalread = 0;
-    
-    int remain = inbufsize - r->content_len;
-       int readed = 0;
-    totalread += remain;
-    char bufftwo[2048];
-   
-    while (totalread < r->content_len) {
-            //  printf("in the write loop written %d, need to writed %d\n");
-            readed = read(connfd, bufftwo, remain);
-            write(opened, bufftwo, readed);
-            printf("%s", bufftwo);
-            totalread += readed;
+        int writed = 0;
+        if (inbufsize >= r->content_len) {
+
+            writed = r->content_len;
+            strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
+            *fromend = inbufsize - r->content_len;
+
+        } else {
+            int totalread = 0;
+
+            int remain = inbufsize - r->content_len;
+            int readed = 0;
+            totalread += remain;
+            char bufftwo[2048];
+
+            while (totalread < r->content_len) {
+                //  printf("in the write loop written %d, need to writed %d\n");
+                readed = read(connfd, bufftwo, remain);
+       //         write(opened, bufftwo, readed);
+                printf("%s", bufftwo);
+                totalread += readed;
+            }
         }
+
+    } else {
+        int writed = 0;
+        //    int towrite = r->content_len;
+        if (inbufsize >= r->content_len) {
+
+            writed = write(opened, buffer, r->content_len);
+            strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
+            *fromend = inbufsize - r->content_len;
+
+        } else {
+            int totalwrote = 0;
+            int remain = inbufsize - r->content_len;
+            write(opened, buffer, remain);
+            int readed = 0;
+            totalwrote += remain;
+            char bufftwo[2048];
+
+            while (totalwrote < r->content_len) {
+                //  printf("in the write loop written %d, need to writed %d\n");
+                readed = read(connfd, bufftwo, remain);
+                write(opened, bufftwo, readed);
+                printf("%s", bufftwo);
+                totalwrote += readed;
+            }
+        }
+        resptype = 200;
+        close(opened);
     }
-    
-    }else{
-    int writed = 0;
-//    int towrite = r->content_len;
-    if(inbufsize >= r->content_len){
-        
-        writed = write(opened, buffer ,r->content_len);
-         strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
-        *fromend = inbufsize - r->content_len;
-                        
-    }else{
-    int totalwrote = 0;
-    int remain = inbufsize - r->content_len;
-    write(opened, buffer, remain);
-    int readed = 0;
-    totalwrote += remain;
-    char bufftwo[2048];
-   
-    while (totalwrote < r->content_len) {
-            //  printf("in the write loop written %d, need to writed %d\n");
-            readed = read(connfd, bufftwo, remain);
-            write(opened, bufftwo, readed);
-            printf("%s", bufftwo);
-            totalwrote += readed;
-        }
-    }
-    resptype = 200;
-    close(opened);
-     
-           }
-     Response *resp = response_create(resptype);
-        writeresp(resp, connfd);
-        response_delete(&resp);
+    Response *resp = response_create(resptype);
+    writeresp(resp, connfd);
+    response_delete(&resp);
 
     return 0;
 }
-
-int execute_put(Request *r, int connfd, char *buffer, int start, int end) {
+int execute_put(
+    Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize) {
     printf("PUT request\n");
     bool created = true;
-    int opened = open(r->uri, O_CREAT | O_EXCL | O_WRONLY, 0666);
+    int resptype = 0;
+    int opened = open(r->uri, O_WRONLY | O_CREAT | O_APPEND, 0666);
     if (opened == -1) {
         printf("not openend right\n");
         if (errno == EEXIST) {
@@ -437,52 +433,80 @@ int execute_put(Request *r, int connfd, char *buffer, int start, int end) {
             opened = open(r->uri, O_WRONLY);
             if (opened == -1) {
                 if (errno == EACCES) {
-                    Response *errrep = response_create(403);
-                    writeresp(errrep, connfd);
-                    response_delete(&errrep);
+                    resptype = 404;
                     return 1;
                 }
             }
         }
         if (errno == EACCES) {
             printf("bad access somehow\n");
-            Response *errrep = response_create(403);
-            writeresp(errrep, connfd);
-            response_delete(&errrep);
+            resptype = 403;
             return 1;
         }
-    }
-    bool readfrombuf = false;
-    if (start != end) {
-        readfrombuf = true;
-    }
+        int writed = 0;
+        if (inbufsize >= r->content_len) {
 
-    int remain = end - start;
-    printf("the buff %d the write%d\n", start - end, r->content_len);
-    if (remain >= r->content_len) {
-        printf("written loop 1\n");
-        write(opened, buffer + start, r->content_len);
+            writed = r->content_len;
+            strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
+            *fromend = inbufsize - r->content_len;
+
+        } else {
+            int totalread = 0;
+
+            int remain = inbufsize - r->content_len;
+            int readed = 0;
+            totalread += remain;
+            char bufftwo[2048];
+
+            while (totalread < r->content_len) {
+                //  printf("in the write loop written %d, need to writed %d\n");
+                readed = read(connfd, bufftwo, remain);
+     //           write(opened, bufftwo, readed);
+                printf("%s", bufftwo);
+                totalread += readed;
+            }
+        }
 
     } else {
-        if (end - start != 0) {
-            write(opened, buffer + start, end - start);
-        }
-        int writed = end - start;
+        int writed = 0;
+        //    int towrite = r->content_len;
+        if (inbufsize >= r->content_len) {
 
-        char bufftwo[2048];
-        int readed = 0;
-        while (writed < r->content_len) {
-            //  printf("in the write loop written %d, need to writed %d\n");
-            readed = read(connfd, bufftwo, 2048);
-            write(opened, bufftwo, readed);
-            // printf("%s", bufftwo);
-            writed += readed;
+            writed = write(opened, buffer, r->content_len);
+            strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
+            *fromend = inbufsize - r->content_len;
+
+        } else {
+            int totalwrote = 0;
+            int remain = inbufsize - r->content_len;
+            write(opened, buffer, remain);
+            int readed = 0;
+            totalwrote += remain;
+            char bufftwo[2048];
+
+            while (totalwrote < r->content_len) {
+                //  printf("in the write loop written %d, need to writed %d\n");
+                readed = read(connfd, bufftwo, remain);
+                write(opened, bufftwo, readed);
+                printf("%s", bufftwo);
+                totalwrote += readed;
+            }
         }
+        resptype = 200;
+        close(opened);
     }
 
-    Response *resp = response_create(200);
-    writeresp(resp, connfd);
-    response_delete(&resp);
+    if (created) {
 
+        Response *resp = response_create(201);
+        writeresp(resp, connfd);
+        response_delete(&resp);
+
+    } else {
+
+        Response *resp = response_create(resptype);
+        writeresp(resp, connfd);
+        response_delete(&resp);
+    }
     return 0;
 }
