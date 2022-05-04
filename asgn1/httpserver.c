@@ -94,8 +94,15 @@ void handle_connection(int connfd) {
         case 2:
             // execute_append(r, connfd);
             break;
-        case 4: printf("badreq");  fflush(stdout); break;
-        case 0: printf("unimp req"); break;
+        case 4: printf("badreq");     Response *resp = response_create(400);
+    writeresp(resp, connfd);
+    response_delete(&resp);
+
+  fflush(stdout); break;
+        case 0: printf("unimp req");   Response *respun = response_create(501);
+    writeresp(respun, connfd);
+    response_delete(&respun);
+break;
         }
     }
     printf("\n");
