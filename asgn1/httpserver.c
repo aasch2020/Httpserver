@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -71,9 +72,9 @@ void handle_connection(int connfd) {
     int altrend = 0;
     char onebuff[2048] = { '\0' };
     char twobuff[2048] = { '\0' };
-      Request *r = request_create();
+    Request *r = request_create();
     while (1) {
-  
+        bool badreq = false;
         if (hcreadstart(r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
             printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
             break;
@@ -89,21 +90,53 @@ void handle_connection(int connfd) {
         switch (typed) {
         case 1: execute_get(r, connfd); break;
         case 3:
-             execute_append(r, connfd, onebuff, &altrend, twobuff, fromend);
+            if (execute_append(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
+                fromend = 0;
+                altrend = 0;
+                 badreq = true;
+                memset(onebuff, '\0', 2048);
+                memset(twobuff, '\0', 2048);
+            }
+
             break;
         case 2:
-             execute_put(r, connfd, onebuff, &altrend, twobuff, fromend);
+            if (execute_put(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
+                fromend = 0;
+                altrend = 0;
+                 badreq = true;
+                memset(onebuff, '\0', 2048);
+                memset(twobuff, '\0', 2048);
+            }
             break;
-        case 4: printf("badreq");     Response *resp = response_create(400);
-    writeresp(resp, connfd);
-    response_delete(&resp);
+        case 4:
+            printf("badreq");
+            Response *resp = response_create(400);
+            writeresp(resp, connfd);
+            response_delete(&resp);
+            fromend = 0;
+            altrend = 0;
+            badreq = true;
+            memset(onebuff, '\0', 2048);
+            memset(twobuff, '\0', 2048);
 
-  fflush(stdout); break;
-        case 0: printf("unimp req");   Response *respun = response_create(501);
-    writeresp(respun, connfd);
-    response_delete(&respun);
-break;
+            fflush(stdout);
+            break;
+        case 0:
+            printf("unimp req");
+            Response *respun = response_create(501);
+            writeresp(respun, connfd);
+            response_delete(&respun);
+            fromend = 0;
+            altrend = 0;
+            badreq = true;
+            memset(onebuff, '\0', 2048);
+            memset(twobuff, '\0', 2048);
+
+            break;
         }
+        if(badreq){
+ break;
+ }
     }
     printf("\n");
     (void) connfd;

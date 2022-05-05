@@ -361,29 +361,6 @@ int execute_append(
             resptype = 403;
             //     return 1;
         }
-        int writed = 0;
-        if (inbufsize >= r->content_len) {
-
-            writed = r->content_len;
-            strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
-            *fromend = inbufsize - r->content_len;
-
-        } else {
-            int totalread = 0;
-
-            int remain = inbufsize - r->content_len;
-            int readed = 0;
-            totalread += remain;
-            char bufftwo[2048];
-
-            while (totalread < r->content_len) {
-                //  printf("in the write loop written %d, need to writed %d\n");
-                readed = read(connfd, bufftwo, remain);
-       //         write(opened, bufftwo, readed);
-                printf("%s", bufftwo);
-                totalread += readed;
-            }
-        }
 
     } else {
         int writed = 0;
@@ -416,7 +393,9 @@ int execute_append(
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
     response_delete(&resp);
-
+    if (resptype != 200) {
+        return 1;
+    }
     return 0;
 }
 int execute_put(
@@ -433,21 +412,20 @@ int execute_put(
             created = true;
             opens = true;
             opened = open(r->uri, O_WRONLY);
-               if (errno == EACCES) {
-            printf("bad access somehow\n");
+            if (errno == EACCES) {
+                printf("bad access somehow\n");
+                resptype = 403;
+                opens = false;
+            }
+        }
+        if (errno == EACCES) {
+            printf("death");
             resptype = 403;
             opens = false;
-                }
-
-      }
-      if(errno == EACCES){
-        printf("death");
-             resptype = 403;
-        opens = false;
-      }
-   } else{
-    opens = true;
-    }        /*     int writed = 0;
+        }
+    } else {
+        opens = true;
+    } /*     int writed = 0;
         if (inbufsize >= r->content_len) {
 
             writed = r->content_len;
@@ -471,8 +449,7 @@ int execute_put(
             }
         }*/
 
-    
-    if(opens){
+    if (opens) {
         int writed = 0;
         //    int towrite = r->content_len;
         if (inbufsize >= r->content_len) {
@@ -512,6 +489,9 @@ int execute_put(
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
         response_delete(&resp);
+    }
+    if (resptype != 200) {
+        return 1;
     }
     return 0;
 }
