@@ -440,7 +440,7 @@ int execute_append(
         if (inbufsize >= r->content_len) {
             printf("writing here too but shouldn");
             writed = write(opened, buffer, r->content_len);
-            strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
+            memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
             *fromend = inbufsize - r->content_len;
 
         } else {
@@ -521,7 +521,7 @@ int execute_put(
         if (inbufsize >= r->content_len) {
             printf("writing here too but shouldn");
             writed = write(opened, buffer, r->content_len);
-            strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
+            memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
             *fromend = inbufsize - r->content_len;
 
         } else {

@@ -25,3 +25,4 @@ The notable design decisions for this document include creating structs for requ
 ## Error Messages.
 
 The program will return http error responses on error, for example 404 not found if a given file does not exist.
+
