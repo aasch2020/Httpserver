@@ -445,13 +445,13 @@ int execute_append(
 
         } else {
             int totalwrote = 0;
-            int remain = 0;
+         //   int remain = 0;
             if (inbufsize != 0) {
-                remain = r->content_len - inbufsize;
-                write(opened, buffer, remain);
+         //       remain = r->content_len - inbufsize;
+                write(opened, buffer, inbufsize);
             }
             int readed = 0;
-            totalwrote += remain;
+            totalwrote += inbufsize;
             char bufftwo[1025] = { '\0' };
        //     printf("%d, remain, %d, totalwrote", remain, totalwrote);
             while (totalwrote < r->content_len) {
@@ -460,7 +460,7 @@ int execute_append(
                 //  printf("in the write loop written %d, need to writed %d\n");
                 if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
-                    totalwrote += 1024;
+                    totalwrote += readed;
                 } else {
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
@@ -486,7 +486,7 @@ int execute_append(
 }
 int execute_put(
     Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize) {
-    printf("PUT request\n");
+    printf("PUT request with an in buffer of %d\n", inbufsize);
     bool created = true;
     int resptype = 0;
     bool opens = false;
@@ -526,20 +526,22 @@ int execute_put(
             int totalwrote = 0;
             int remain = 0;
             if (inbufsize != 0) {
-                remain = r->content_len - inbufsize;
-                write(opened, buffer, remain);
+            //    remain = r->content_len - inbufsize;
+                write(opened, buffer, inbufsize);
             }
             int readed = 0;
-            totalwrote += remain;
+            totalwrote += inbufsize;
             char bufftwo[1025] = { '\0' };
             printf("%d, remain, %d, totalwrote", remain, totalwrote);
             while (totalwrote < r->content_len) {
-                printf("stuck here\n");
-                printf("%d, remain, %d, totalwrote", remain, totalwrote);
+   printf("%d, remain, %d, totalwrote", remain, totalwrote);
+
+    //            printf("stuck here\n");
+      //          printf("%d, remain, %d, totalwrote", remain, totalwrote);
                 //  printf("in the write loop written %d, need to writed %d\n");
                 if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
-                    totalwrote += 1024;
+                    totalwrote += readed;
                 } else {
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
