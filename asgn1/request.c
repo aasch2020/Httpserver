@@ -161,7 +161,7 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
         return 0;
     }
     regcomp(&regm, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
-    regcomp(&done, "[\r][\n][\r][\r]", REG_EXTENDED | REG_NOSUB);
+    regcomp(&done, "[\r][\n][\r][\n]", REG_EXTENDED | REG_NOSUB);
     regmatch_t regs;
     char *statmatch;
     printf("%d data at parsed\n", *parsed);
@@ -249,7 +249,7 @@ int headreadstart(
         timesgone++;
         //     readbuff[readed] = '\0';
         printf("the thing i read in%s\n", readbuff);
-        printf("thiswhile1 parsed is %d, %d\n", parser, readcur + parser);
+        printf("thiswhile1 parsed is %d, %s\n", parser, readbuff + parser);
         readed += readcur;
         printf("readbuff + parsed is %s\n", readbuff);
         int check = addheadersfrombuff(r, readed - parser, &parser, readbuff + parser);
