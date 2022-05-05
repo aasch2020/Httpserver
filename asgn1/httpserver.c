@@ -98,7 +98,7 @@ void handle_connection(int connfd) {
         int typed = type(r);
         print_req(r);
         switch (typed) {
-        case 1: execute_get(r, connfd, onebuff, &altrend, twobuff, fromend); break;
+        case 1: execute_get(r, connfd); break;
         case 3:
             if (execute_append(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
                 fromend = 0;
