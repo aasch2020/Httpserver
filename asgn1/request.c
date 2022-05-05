@@ -322,6 +322,9 @@ int validate(Request *r) {
 }
 
 int type(Request *r) {
+    if(r->vernum != 1 || r->verdec != 1){
+       return 4;
+    }
     if (r->badreq) {
         return 4;
     }
