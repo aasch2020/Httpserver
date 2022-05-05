@@ -534,7 +534,7 @@ int execute_put(
             char bufftwo[1025] = { '\0' };
             printf("%d, remain, %d, totalwrote", remain, totalwrote);
             while (totalwrote < r->content_len) {
-   printf("%d, remain, %d, totalwrote", remain, totalwrote);
+  // printf("%d, remain, %d, totalwrote", remain, totalwrote);
 
     //            printf("stuck here\n");
       //          printf("%d, remain, %d, totalwrote", remain, totalwrote);
