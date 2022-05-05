@@ -40,7 +40,7 @@ void request_update(Request *r, char *match) {
     //  r->thetotalhead = strndup(match, 40);
     //   printf("update req;");
     sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri + 1, &(r->vernum), &(r->verdec));
-
+    
     print_req(r);
 }
 
@@ -431,10 +431,17 @@ int execute_get(
                 }
             }
         }
+        if(resptype == 200){
+  Response *resp = response_create(resptype);
+        write_file(resp, opened, connfd);
+        response_delete(&resp);
+
+}else{
         Response *errrep = response_create(resptype);
         writeresp(errrep, connfd);
         response_delete(&errrep);
-    }
+   } 
+}
     return 0;
 }
 int execute_append(
