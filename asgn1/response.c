@@ -75,8 +75,6 @@ Response *response_create(int type) {
     return r;
 }
 
-
-
 void addheaderres(Response *r, char *header_keyin, char *header_valin) {
     //    printf("%s\n", header_keyin);
     //    printf("%s\n", header_valin);
