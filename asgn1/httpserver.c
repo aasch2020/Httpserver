@@ -77,20 +77,24 @@ int read_somechar(int connfd, int numtoread, char *check) {
 void handle_connection(int connfd) {
     int fromend = 0;
     int altrend = 0;
+   int chekr = 0;
     char onebuff[2048] = { '\0' };
     char twobuff[2048] = { '\0' };
     while (1) {
+        chekr = 0;
         r = request_create();
-
+ bool severerr = false;
         bool badreq = false;
         printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
 
         if (hcreadstart(r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
             printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
+            severerr = true;
             break;
         }
         printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
         if (-1 == headreadstart(r, connfd, altrend, &fromend, twobuff, onebuff)) {
+            severerr = true;
             break;
         }
         printf("overreadvalue the second = %d %s %s\n", fromend, onebuff, twobuff);
@@ -100,7 +104,7 @@ void handle_connection(int connfd) {
         switch (typed) {
         case 1: execute_get(r, connfd); break;
         case 3:
-            if (execute_append(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
+            if ((chekr = execute_append(r, connfd, onebuff, &altrend, twobuff, fromend))== 1) {
                 fromend = 0;
                 altrend = 0;
                 badreq = true;
@@ -110,7 +114,7 @@ void handle_connection(int connfd) {
 
             break;
         case 2:
-            if (execute_put(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
+            if ((chekr = execute_put(r, connfd, onebuff, &altrend, twobuff, fromend))== 1) {
                 fromend = 0;
                 altrend = 0;
                 badreq = true;
@@ -146,7 +150,19 @@ void handle_connection(int connfd) {
         }
         request_clear(r);
         // request_delete(&r);
+        if(chekr == -1){
+            Response *respun = response_create(500);
+            writeresp(respun, connfd);
+            response_delete(&respun);
+            fromend = 0;
+            altrend = 0;
+            badreq = true;
+            memset(onebuff, '\0', 2048);
+            memset(twobuff, '\0', 2048);
 
+
+break;
+        }
         if (badreq) {
             break;
         }

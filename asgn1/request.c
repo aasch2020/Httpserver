@@ -282,7 +282,7 @@ void add_header(Request *r, char *header_total) {
     }
     r->numheads += 1;
     if (r->numheads % 30 == 0) {
-        printf("this shouldn't happen\n");
+      //  printf("this shouldn't happen\n");
         r->header_key = realloc(r->header_key, (r->numheads + 30) * sizeof(char *));
 
         r->header_vals = realloc(r->header_vals, (r->numheads + 30) * sizeof(char *));
@@ -420,13 +420,13 @@ int execute_append(
     printf("%d content length is\n", r->content_len);
     int opened = open(r->uri, O_WRONLY | O_APPEND);
     if (opened == -1) {
-     int errord = errno;
-     printf("not openend right\n");
+        int errord = errno;
+        printf("not openend right\n");
         if (errord == ENOENT) {
             resptype = 404;
             //       return 1;
         }
-        if ((errord == EACCES) ||(errord == EISDIR)) {
+        if ((errord == EACCES) || (errord == EISDIR)) {
             printf("bad access somehow\n");
             resptype = 403;
             //     return 1;
@@ -434,7 +434,7 @@ int execute_append(
         printf("the error number is %d\n", errord);
 
     } else {
-         printf("strting to try prin\n");
+        printf("strting to try prin\n");
         int writed = 0;
         //    int towrite = r->content_len;
         if (inbufsize >= r->content_len) {
@@ -445,35 +445,37 @@ int execute_append(
 
         } else {
             int totalwrote = 0;
-         //   int remain = 0;
+            //   int remain = 0;
             if (inbufsize != 0) {
-         //       remain = r->content_len - inbufsize;
+                //       remain = r->content_len - inbufsize;
                 write(opened, buffer, inbufsize);
             }
             int readed = 0;
             totalwrote += inbufsize;
             char bufftwo[1025] = { '\0' };
-       //     printf("%d, remain, %d, totalwrote", remain, totalwrote);
+            //     printf("%d, remain, %d, totalwrote", remain, totalwrote);
             while (totalwrote < r->content_len) {
-        //        printf("stuck here\n");
-    //            printf("%d, remain, %d, totalwrote", remain, totalwrote);
+                //        printf("stuck here\n");
+                //            printf("%d, remain, %d, totalwrote", remain, totalwrote);
                 //  printf("in the write loop written %d, need to writed %d\n");
                 if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
-                    totalwrote += readed;
+                                       totalwrote += readed;
                 } else {
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
                 }
-                if(readed == 0){
-                    return -1;
-                }
-                write(opened, bufftwo, readed);
+ if(readed == 0){
+                      close(opened);
+                      resptype = 501;
+                      return 1;
+                    }
+
+               write(opened, bufftwo, readed);
                 //   printf("%s", bufftwo);
             }
-   
-       }
-    resptype = 200;
+        }
+        resptype = 200;
         close(opened);
     }
     Response *resp = response_create(resptype);
@@ -526,7 +528,7 @@ int execute_put(
             int totalwrote = 0;
             int remain = 0;
             if (inbufsize != 0) {
-            //    remain = r->content_len - inbufsize;
+                //    remain = r->content_len - inbufsize;
                 write(opened, buffer, inbufsize);
             }
             int readed = 0;
@@ -534,10 +536,10 @@ int execute_put(
             char bufftwo[1025] = { '\0' };
             printf("%d, remain, %d, totalwrote", remain, totalwrote);
             while (totalwrote < r->content_len) {
-  // printf("%d, remain, %d, totalwrote", remain, totalwrote);
+                // printf("%d, remain, %d, totalwrote", remain, totalwrote);
 
-    //            printf("stuck here\n");
-      //          printf("%d, remain, %d, totalwrote", remain, totalwrote);
+                //            printf("stuck here\n");
+                //          printf("%d, remain, %d, totalwrote", remain, totalwrote);
                 //  printf("in the write loop written %d, need to writed %d\n");
                 if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
@@ -546,11 +548,11 @@ int execute_put(
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
                 }
-if(readed == 0){
+                 if (readed == 0) {
                     return -1;
                 }
 
-                write(opened, bufftwo, readed);
+               write(opened, bufftwo, readed);
                 //   printf("%s", bufftwo);
             }
         }
