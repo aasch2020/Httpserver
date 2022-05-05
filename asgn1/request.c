@@ -372,7 +372,14 @@ const char *get_uri(Request *r) {
 
 int execute_get(
     Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize) {
-    int resptype = 0;
+    int resptype = 404;
+    int frm = *fromend;
+    int fd2 = inbufsize;
+    char* as = buffer;
+   as += 2;
+   char* df = writtenfrombuf;
+  df += 2;
+   frm += fd2;
     int opened = open(r->uri, O_RDWR);
     if (errno == EISDIR) {
         resptype = 403;
@@ -391,7 +398,7 @@ int execute_get(
     } else {
 
         resptype = 200;
-        if (r->content_len != -1) {
+/*        if (r->content_len != -1) {
             printf("strting to try prin\n");
             int writed = 0;
             //    int towrite = r->content_len;
@@ -430,7 +437,7 @@ int execute_get(
                     //   printf("%s", bufftwo);
                 }
             }
-        }
+        }*/
         if(resptype == 200){
   Response *resp = response_create(resptype);
         write_file(resp, opened, connfd);
