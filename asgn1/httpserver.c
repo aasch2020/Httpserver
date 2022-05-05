@@ -20,6 +20,13 @@
    Converts a string to an 16 bits unsigned integer.
    Returns 0 if the string is malformed or out of the range.
  */
+
+Request *r;
+
+void sighand(){
+  request_delete(&r);
+  exit(1);
+}
 uint16_t strtouint16(char number[]) {
     char *last;
     long num = strtol(number, &last, 10);
@@ -72,8 +79,9 @@ void handle_connection(int connfd) {
     int altrend = 0;
     char onebuff[2048] = { '\0' };
     char twobuff[2048] = { '\0' };
-    Request *r = request_create();
-    while (1) {
+     while (1) {
+     r = request_create();
+
        bool badreq = false;
   printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
 
@@ -137,11 +145,13 @@ void handle_connection(int connfd) {
             break;
         }
         request_clear(r);
+ request_delete(&r);
+
          if(badreq){
          break;
          }
     }
-    printf("\n");
+       printf("\n");
     (void) connfd;
 }
 
@@ -157,12 +167,14 @@ int main(int argc, char *argv[]) {
     }
     listenfd = create_listen_socket(port);
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGINT, sighand);
     while (1) {
         int connfd = accept(listenfd, NULL, NULL);
         if (connfd < 0) {
             warn("accept error");
             continue;
         }
+        
         handle_connection(connfd);
         // good code opens and closes objects in the same context. *sigh*
         close(connfd);

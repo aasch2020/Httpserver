@@ -65,6 +65,7 @@ void request_clear(Request *r){
 
 }
 void request_delete(Request **r) {
+   if(*r != NULL){
     for (int i = 0; i <= ((*r)->numheads); i++) {
         free((*r)->header_key[i]);
         free((*r)->header_vals[i]);
@@ -72,6 +73,8 @@ void request_delete(Request **r) {
     free((*r)->header_vals);
     free((*r)->header_key);
     free(*r);
+    *r = NULL;
+}
 }
 int hcreadstart(
     Request *r, int connfd, int inbufsize, int *fromend, char *inbuffer, char *outbuffer) {
@@ -79,11 +82,7 @@ int hcreadstart(
     printf("the buffer in is length %d at hcreadstart %s\n", inbufsize, inbuffer);
     regex_t regm;
     regex_t done;
-    regcomp(&regm,
-        "[a-z, A-Z]{1,8}[ ][/][a-zA-Z0-9._/]{1,19}[ ][H][T][T][P][/][0-9][.][0-9][\r][\n]",
-        REG_EXTENDED);
-    regcomp(&done, "[\r][\n]", REG_EXTENDED);
-    regmatch_t regs;
+   regmatch_t regs;
     regmatch_t enma;
     char readbuff[2048] = { '\0' };
     strncpy(readbuff, inbuffer, 40);
@@ -99,14 +98,21 @@ int hcreadstart(
     //  }
     int timesgone = 0;
     while (readed < toread) {
+        
         if(!(inbufsize>0 && timesgone == 0)){
         readcur = read(connfd, readbuff + readed, toread - readed);
         if (readcur == 0) {
-            regfree(&regm);
+         //   regfree(&regm);
+          //  regfree(&done);
             printf("path 1\n");
             return -1;
         }
         }
+            regcomp(&regm,
+        "[a-z, A-Z]{1,8}[ ][/][a-zA-Z0-9._/]{1,19}[ ][H][T][T][P][/][0-9][.][0-9][\r][\n]",
+        REG_EXTENDED);
+    regcomp(&done, "[\r][\n]", REG_EXTENDED);
+ 
         timesgone++;
     //    printf("thiswhile read is %d\n", readcur);
         readed += readcur;
@@ -123,6 +129,7 @@ int hcreadstart(
                 strncpy(outbuffer, readbuff + regs.rm_eo, readed - regs.rm_eo);
                 *fromend = readed - regs.rm_eo;
             }
+  regfree(&done);   regfree(&regm);  free(statmatch);
             found = true;
             return 1;
         }
@@ -135,13 +142,14 @@ int hcreadstart(
                 printf("when we find eol %d %d\n", enma.rm_so, readed);
                 *fromend = readed - enma.rm_eo;
             }
-
+              regfree(&done);   regfree(&regm);
             return 0;
         }
     }
     printf("non match)\n");
-    r->badreq = true;
+   regfree(&done);  regfree(&regm);   r->badreq = true;
     return 0;
+
 }
 
 int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
@@ -172,6 +180,7 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
             && (*(inbuffer + trackwhere + regs.rm_eo + 1)) == '\n') {
             *parsed += regs.rm_eo + trackwhere + 2;
             printf("we found the end\n");
+   regfree(&done);  regfree(&regm); 
             return 0;
         }
         if (regs.rm_so != 0) {
@@ -187,11 +196,13 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
     if (regexec(&done, inbuffer + trackwhere, 0, NULL, 0) == 0) {
         printf("verybadend\n");
         r->badreq = true;
+   regfree(&done);  regfree(&regm); 
         return 0;
     }
     printf("out the end now");
     // printf("no matches?\n");
     *parsed += trackwhere;
+   regfree(&done);  regfree(&regm); 
     return 1;
 }
 
@@ -241,13 +252,15 @@ int headreadstart(
         int check = addheadersfrombuff(r, readed - parser, &parser, readbuff + parser);
         if (check == 0) {
             *fromend = readed - parser;
-            printf("the total read is %d the parsed = %dreading correctly\n", readed, parser);
+           regfree(&regm);   printf("the total read is %d the parsed = %dreading correctly\n", readed, parser);
             strncpy(outbuffer, readbuff + parser, readed - parser);
             return 1;
         }
     }
-    print_req(r);
-    return -2;
+ //   print_req(r);
+  printf("what is this end condition?\n");
+  regfree(&regm);
+    return 0;
 }
 
 void add_header(Request *r, char *header_total) {
