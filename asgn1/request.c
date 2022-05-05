@@ -84,7 +84,7 @@ int hcreadstart(
             printf("path 1\n");
             return -1;
         }
-        printf("thiswhile\n");
+        printf("thiswhile read is %d\n", readcur);
         readed += readcur;
         printf("readbuff %s", readbuff);
         if (0 == regexec(&regm, readbuff, 1, &regs, 0)) {

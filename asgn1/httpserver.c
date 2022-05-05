@@ -134,9 +134,9 @@ void handle_connection(int connfd) {
 
             break;
         }
-        if(badreq){
- break;
- }
+       // if(badreq){
+// break;
+// }
     }
     printf("\n");
     (void) connfd;
