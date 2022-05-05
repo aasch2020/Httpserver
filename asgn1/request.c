@@ -45,7 +45,7 @@ void request_update(Request *r, char *match) {
 }
 
 void request_clear(Request *r) {
-    for (int i = 0; i <= r->numheads; i++) {
+    for (int i = 0; i < r->numheads; i++) {
         free(r->header_key[i]);
         free(r->header_vals[i]);
     }
@@ -60,7 +60,7 @@ void request_clear(Request *r) {
 }
 void request_delete(Request **r) {
     if (*r != NULL) {
-        for (int i = 0; i <= ((*r)->numheads); i++) {
+        for (int i = 0; i < ((*r)->numheads); i++) {
             free((*r)->header_key[i]);
             free((*r)->header_vals[i]);
         }
@@ -181,6 +181,7 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
             printf("we found the end\n");
             regfree(&done);
             regfree(&regm);
+            free(statmatch);
             return 0;
         }
         if (regs.rm_so != 0) {
@@ -189,7 +190,7 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
         }
         printf("the in buffer + the regs is %s the end\n", inbuffer + trackwhere);
         prevend = regs.rm_eo;
-
+        free(statmatch);
         trackwhere += regs.rm_eo;
     }
     //  printf("before end cond we have");
@@ -418,48 +419,62 @@ int execute_append(
     int resptype = 0;
     int opened = open(r->uri, O_WRONLY | O_APPEND);
     if (opened == -1) {
-        printf("not openend right\n");
-        if (errno == ENOENT) {
+     int errord = errno;
+     printf("not openend right\n");
+        if (errord == ENOENT) {
             resptype = 404;
             //       return 1;
         }
-        if ((errno == EACCES) && (errno == EISDIR)) {
+        if ((errord == EACCES) ||(errord == EISDIR)) {
             printf("bad access somehow\n");
             resptype = 403;
             //     return 1;
         }
+        printf("the error number is %d\n", errord);
 
     } else {
+         printf("strting to try prin\n");
         int writed = 0;
         //    int towrite = r->content_len;
         if (inbufsize >= r->content_len) {
-
+            printf("writing here too but shouldn");
             writed = write(opened, buffer, r->content_len);
             strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
             *fromend = inbufsize - r->content_len;
 
         } else {
             int totalwrote = 0;
-            int remain = r->content_len - inbufsize;
-            write(opened, buffer, remain);
+            int remain = 0;
+            if (inbufsize != 0) {
+                remain = r->content_len - inbufsize;
+                write(opened, buffer, remain);
+            }
             int readed = 0;
             totalwrote += remain;
-            char bufftwo[2048];
-
+            char bufftwo[1024] = { '\0' };
+            printf("%d, remain, %d, totalwrote", remain, totalwrote);
             while (totalwrote < r->content_len) {
+                printf("stuck here\n");
+                printf("%d, remain, %d, totalwrote", remain, totalwrote);
                 //  printf("in the write loop written %d, need to writed %d\n");
-                readed = read(connfd, bufftwo, remain);
+                if (r->content_len - totalwrote > 1024) {
+                    readed = read(connfd, bufftwo, 1024);
+                    totalwrote += 1024;
+                } else {
+                    readed = read(connfd, bufftwo, r->content_len - totalwrote);
+                    totalwrote += readed;
+                }
                 write(opened, bufftwo, readed);
-                printf("%s", bufftwo);
-                totalwrote += readed;
+                //   printf("%s", bufftwo);
             }
-        }
-        resptype = 200;
+   
+       }
+    resptype = 200;
         close(opened);
     }
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
-    response_delete(&resp);
+//    response_delete(&resp);
     if (resptype != 200) {
         return 1;
     }
