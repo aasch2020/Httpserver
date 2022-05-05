@@ -123,7 +123,7 @@ void handle_connection(int connfd) {
             }
             break;
         case 4:
-            printf("badreq");
+            printf(" when the request is bad badreq\n");
             Response *resp = response_create(400);
             writeresp(resp, connfd);
             response_delete(&resp);
@@ -163,9 +163,9 @@ void handle_connection(int connfd) {
 
 break;
         }
-        if (badreq) {
-            break;
-        }
+    //    if (badreq) {
+      //      break;
+      //  }
     }
     printf("\n");
     (void) connfd;
