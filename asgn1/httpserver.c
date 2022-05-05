@@ -93,7 +93,7 @@ void handle_connection(int connfd) {
             if (execute_append(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
                 fromend = 0;
                 altrend = 0;
-                 badreq = true;
+                badreq = true;
                 memset(onebuff, '\0', 2048);
                 memset(twobuff, '\0', 2048);
             }
@@ -103,7 +103,7 @@ void handle_connection(int connfd) {
             if (execute_put(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
                 fromend = 0;
                 altrend = 0;
-                 badreq = true;
+                badreq = true;
                 memset(onebuff, '\0', 2048);
                 memset(twobuff, '\0', 2048);
             }
@@ -134,9 +134,9 @@ void handle_connection(int connfd) {
 
             break;
         }
-       // if(badreq){
-// break;
-// }
+        // if(badreq){
+        // break;
+        // }
     }
     printf("\n");
     (void) connfd;
