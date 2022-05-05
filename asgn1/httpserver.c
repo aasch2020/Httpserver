@@ -74,7 +74,7 @@ void handle_connection(int connfd) {
     char twobuff[2048] = { '\0' };
     Request *r = request_create();
     while (1) {
-//       bool badreq = false;
+       bool badreq = false;
   printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
 
         if (hcreadstart(r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
@@ -95,7 +95,7 @@ void handle_connection(int connfd) {
             if (execute_append(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
                 fromend = 0;
                 altrend = 0;
-       //         badreq = true;
+               badreq = true;
                 memset(onebuff, '\0', 2048);
                 memset(twobuff, '\0', 2048);
             }
@@ -104,8 +104,8 @@ void handle_connection(int connfd) {
         case 2:
             if (execute_put(r, connfd, onebuff, &altrend, twobuff, fromend) == 1) {
                 fromend = 0;
-                altrend = 0;
-     //           badreq = true;
+              altrend = 0;
+                badreq = true;
                 memset(onebuff, '\0', 2048);
                 memset(twobuff, '\0', 2048);
             }
@@ -117,7 +117,7 @@ void handle_connection(int connfd) {
             response_delete(&resp);
             fromend = 0;
             altrend = 0;
-   //         badreq = true;
+            badreq = true;
             memset(onebuff, '\0', 2048);
             memset(twobuff, '\0', 2048);
 
@@ -130,16 +130,16 @@ void handle_connection(int connfd) {
             response_delete(&respun);
             fromend = 0;
             altrend = 0;
-         //   badreq = true;
+            badreq = true;
             memset(onebuff, '\0', 2048);
             memset(twobuff, '\0', 2048);
 
             break;
         }
         request_clear(r);
-        // if(badreq){
-        // break;
-        // }
+         if(badreq){
+         break;
+         }
     }
     printf("\n");
     (void) connfd;
