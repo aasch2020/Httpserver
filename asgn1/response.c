@@ -36,7 +36,7 @@ Response *response_create(int type) {
         break;
     case 201:
         strcpy(r->statphrase, "Created\r\n");
-        r->msgbody = (char *) calloc(10, sizeof(char));
+        r->msgbody = (char *) calloc(11, sizeof(char));
         addheaderres(r, "Content-Length", "8");
         strcpy(r->msgbody, "Created\n");
         break;
@@ -62,7 +62,7 @@ Response *response_create(int type) {
     case 500:
         strcpy(r->statphrase, "Internal Server Error\r\n");
         r->msgbody = (char *) calloc(20, sizeof(char));
-        strcpy(r->msgbody, "OK\n");
+        strcpy(r->msgbody, "Internal Server Error\n");
         break;
     case 501:
         strcpy(r->statphrase, "Not Implemented\r\n");
@@ -74,6 +74,8 @@ Response *response_create(int type) {
     }
     return r;
 }
+
+
 
 void addheaderres(Response *r, char *header_keyin, char *header_valin) {
     //    printf("%s\n", header_keyin);

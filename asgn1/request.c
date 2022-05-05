@@ -235,7 +235,7 @@ int headreadstart(
        timesgone++;
         //     readbuff[readed] = '\0';
         printf("the thing i read in%s\n", readbuff);
-        printf("thiswhile1 parsed is %d, %d\n", parser, readcur);
+        printf("thiswhile1 parsed is %d, %d\n", parser, readcur + parser);
         readed += readcur;
         printf("readbuff + parsed is %s\n", readbuff);
         int check = addheadersfrombuff(r, readed - parser, &parser, readbuff + parser);
@@ -357,10 +357,18 @@ int execute_get(Request *r, int connfd) {
     int types = type(r);
     if (types == 1) {
         printf("doing a get req");
-        int opened = open(r->uri, O_RDONLY);
+        
+        int opened = open(r->uri, O_RDWR);
+        if(errno == EISDIR){
+       Response *errrep = response_create(403);
+                 writeresp(errrep, connfd);
+                 response_delete(&errrep);
+                 return 1;  
+       }
         //     int error = errno;
+       opened = open(r->uri, O_RDONLY);
         if (opened == -1) {
-            if (errno == EACCES) {
+            if ((errno == EACCES)|| (errno == EISDIR)) {
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
                 response_delete(&errrep);
@@ -399,7 +407,7 @@ int execute_append(
             resptype = 404;
             //       return 1;
         }
-        if (errno == EACCES) {
+        if ((errno == EACCES) && (errno ==EISDIR)) {
             printf("bad access somehow\n");
             resptype = 403;
             //     return 1;
@@ -455,13 +463,13 @@ int execute_put(
             created = false;
             opens = true;
             opened = open(r->uri, O_WRONLY);
-            if (errno == EACCES) {
+            if ((errno == EACCES) ||(errno == EISDIR)) {
                 printf("bad access somehow\n");
                 resptype = 403;
                 opens = false;
             }
         }
-        if (errno == EACCES) {
+        if ((errno == EACCES)||(errno == EISDIR)) {
             printf("death");
             resptype = 403;
             opens = false;
