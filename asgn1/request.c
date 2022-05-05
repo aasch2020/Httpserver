@@ -38,7 +38,7 @@ void request_badflag(Request *r) {
 void request_update(Request *r, char *match) {
     r->uri[0] = '.';
     //  r->thetotalhead = strndup(match, 40);
-    printf("update req;");
+ //   printf("update req;");
     sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri + 1, &(r->vernum), &(r->verdec));
 
     print_req(r);
@@ -80,7 +80,7 @@ int hcreadstart(
     regex_t regm;
     regex_t done;
     regcomp(&regm,
-        "[a-z, A-Z]{1,8}[ ][/][a-zA-Z0-9._]{1,19}[ ][H][T][T][P][/][0-9][.][0-9][\r][\n]",
+        "[a-z, A-Z]{1,8}[ ][/][a-zA-Z0-9._/]{1,19}[ ][H][T][T][P][/][0-9][.][0-9][\r][\n]",
         REG_EXTENDED);
     regcomp(&done, "[\r][\n]", REG_EXTENDED);
     regmatch_t regs;
@@ -108,16 +108,16 @@ int hcreadstart(
         }
         }
         timesgone++;
-        printf("thiswhile read is %d\n", readcur);
+    //    printf("thiswhile read is %d\n", readcur);
         readed += readcur;
-        printf("readbuff %s", readbuff);
+     //   printf("readbuff %s", readbuff);
         if (0 == regexec(&regm, readbuff, 1, &regs, 0)) {
-            printf("wematchedstat\n");
+   //         printf("wematchedstat\n");
             lenmatch = regs.rm_eo - regs.rm_so;
-            printf("%d to here %dwematched\n", regs.rm_so, regs.rm_eo);
+     //       printf("%d to here %dwematched\n", regs.rm_so, regs.rm_eo);
             //   startofmatch = regs.rm_eo - regs.rm_so;
             statmatch = strndup(readbuff + regs.rm_so, lenmatch);
-            printf("the string we matched is%s\n", statmatch);
+      //      printf("the string we matched is%s\n", statmatch);
             request_update(r, statmatch);
             if (regs.rm_eo != readed) {
                 strncpy(outbuffer, readbuff + regs.rm_eo, readed - regs.rm_eo);
