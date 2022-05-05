@@ -97,13 +97,17 @@ int hcreadstart(
     //  if(inbufsize > toread){
 
     //  }
+    int timesgone = 0;
     while (readed < toread) {
+        if(!(inbufsize>0 && timesgone == 0)){
         readcur = read(connfd, readbuff + readed, toread - readed);
         if (readcur == 0) {
             regfree(&regm);
             printf("path 1\n");
             return -1;
         }
+        }
+        timesgone++;
         printf("thiswhile read is %d\n", readcur);
         readed += readcur;
         printf("readbuff %s", readbuff);
@@ -213,17 +217,21 @@ int headreadstart(
     //   char* statmatch;
     //    int lenmatch = 0;
     //  int startofmatch = 0;
+    int timesgone = 0;
     while (readed < toread || !found) {
+       if(!(inbufsize > 0 && timesgone == 0)){
+        printf("stuck reading\n");
         readcur = read(connfd, readbuff + readed, toread - readed);
         printf("toread - readed = %d\n", toread - readed);
         //  parser = 0;
-
+      
         printf("the amount of characters read = %d\n", readcur);
         if (readcur == 0) {
             regfree(&regm);
             printf("path 11\n");
             return -1;
         }
+       }
         //     readbuff[readed] = '\0';
         printf("the thing i read in%s\n", readbuff);
         printf("thiswhile1 parsed is %d, %d\n", parser, readcur);
@@ -316,13 +324,22 @@ int type(Request *r) {
     if (r->badreq) {
         return 4;
     }
+    
     if (strcmp(r->type, "GET") == 0) {
         return 1;
     }
     if (strcmp(r->type, "PUT") == 0) {
+        if(r->content_len == -1){
+   printf("the cont len == %d\n", r->content_len);
+                 return 4;
+         }
         return 2;
     }
     if (strcmp(r->type, "APPEND") == 0) {
+         if(r->content_len == -1){
+                 return 4;
+         }
+
         return 3;
     }
     return 0;
