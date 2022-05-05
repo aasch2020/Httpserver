@@ -147,7 +147,13 @@ void write_file(Response *r, int filewrt, int connec) {
     int readin = 0;
     while (written != bodylen) {
         readin = read(filewrt, writebuf, 2048);
-        written += write(connec, writebuf, readin);
+                    if(readin == 0){
+ free(thebody);
+   
+                return;
+                }
+    
+   written += write(connec, writebuf, readin);
     }
     free(thebody);
 }

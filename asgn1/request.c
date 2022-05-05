@@ -464,6 +464,9 @@ int execute_append(
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
                 }
+                if(readed == 0){
+                    return -1;
+                }
                 write(opened, bufftwo, readed);
                 //   printf("%s", bufftwo);
             }
@@ -474,7 +477,7 @@ int execute_append(
     }
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
-//    response_delete(&resp);
+    response_delete(&resp);
     if (resptype != 200) {
         return 1;
     }
@@ -540,6 +543,10 @@ int execute_put(
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
                 }
+if(readed == 0){
+                    return -1;
+                }
+
                 write(opened, bufftwo, readed);
                 //   printf("%s", bufftwo);
             }
