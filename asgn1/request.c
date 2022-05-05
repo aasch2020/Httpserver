@@ -451,13 +451,13 @@ int execute_append(
             }
             int readed = 0;
             totalwrote += remain;
-            char bufftwo[1024] = { '\0' };
-            printf("%d, remain, %d, totalwrote", remain, totalwrote);
+            char bufftwo[1025] = { '\0' };
+       //     printf("%d, remain, %d, totalwrote", remain, totalwrote);
             while (totalwrote < r->content_len) {
-                printf("stuck here\n");
-                printf("%d, remain, %d, totalwrote", remain, totalwrote);
+        //        printf("stuck here\n");
+    //            printf("%d, remain, %d, totalwrote", remain, totalwrote);
                 //  printf("in the write loop written %d, need to writed %d\n");
-                if (r->content_len - totalwrote > 1024) {
+                if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += 1024;
                 } else {
@@ -530,13 +530,13 @@ int execute_put(
             }
             int readed = 0;
             totalwrote += remain;
-            char bufftwo[1024] = { '\0' };
+            char bufftwo[1025] = { '\0' };
             printf("%d, remain, %d, totalwrote", remain, totalwrote);
             while (totalwrote < r->content_len) {
                 printf("stuck here\n");
                 printf("%d, remain, %d, totalwrote", remain, totalwrote);
                 //  printf("in the write loop written %d, need to writed %d\n");
-                if (r->content_len - totalwrote > 1024) {
+                if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += 1024;
                 } else {
