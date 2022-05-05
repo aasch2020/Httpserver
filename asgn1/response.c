@@ -31,7 +31,7 @@ Response *response_create(int type) {
     case 200:
         printf("switch case 1\n");
         strcpy(r->statphrase, "OK\r\n");
-        r->msgbody = (char *) calloc(3, sizeof(char));
+        r->msgbody = (char *) calloc(4, sizeof(char));
 
         break;
     case 201:
