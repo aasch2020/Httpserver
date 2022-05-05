@@ -417,6 +417,7 @@ int execute_append(
     printf("PUT request\n");
     //   bool created = true;
     int resptype = 0;
+    printf("%d content length is\n", r->content_len);
     int opened = open(r->uri, O_WRONLY | O_APPEND);
     if (opened == -1) {
      int errord = errno;
