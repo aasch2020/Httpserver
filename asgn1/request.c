@@ -422,28 +422,32 @@ int execute_append(
 int execute_put(
     Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize) {
     printf("PUT request\n");
-    bool created = true;
+    bool created = false;
     int resptype = 0;
-    int opened = open(r->uri, O_WRONLY | O_CREAT | O_APPEND, 0666);
+    bool opens = false;
+    int opened = open(r->uri, O_WRONLY | O_CREAT | O_EXCL, 0666);
     if (opened == -1) {
         printf("not openend right\n");
         if (errno == EEXIST) {
             printf("the swag thing\n");
-            created = false;
+            created = true;
+            opens = true;
             opened = open(r->uri, O_WRONLY);
-            if (opened == -1) {
-                if (errno == EACCES) {
-                    resptype = 404;
-                    return 1;
-                }
-            }
-        }
-        if (errno == EACCES) {
+               if (errno == EACCES) {
             printf("bad access somehow\n");
             resptype = 403;
-            return 1;
-        }
-        int writed = 0;
+            opens = false;
+                }
+
+      }
+      if(errno == EACCES){
+        printf("death");
+             resptype = 403;
+        opens = false;
+      }
+   } else{
+    opens = true;
+    }        /*     int writed = 0;
         if (inbufsize >= r->content_len) {
 
             writed = r->content_len;
@@ -465,9 +469,10 @@ int execute_put(
                 printf("%s", bufftwo);
                 totalread += readed;
             }
-        }
+        }*/
 
-    } else {
+    
+    if(opens){
         int writed = 0;
         //    int towrite = r->content_len;
         if (inbufsize >= r->content_len) {
