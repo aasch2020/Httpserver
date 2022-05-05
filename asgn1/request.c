@@ -370,46 +370,73 @@ const char *get_uri(Request *r) {
     return r->uri;
 }
 
-int execute_get(Request *r, int connfd) {
-    int types = type(r);
-    if (types == 1) {
-        printf("doing a get req");
-
+int execute_get(Request *r, int connfd,  char *buffer, int *fromend, char *writtenfrombuf, int inbufsize) {
+    int resptype = 0;
         int opened = open(r->uri, O_RDWR);
         if (errno == EISDIR) {
-            Response *errrep = response_create(403);
-            writeresp(errrep, connfd);
-            response_delete(&errrep);
-            return 1;
+           resptype = 403;
+ //          return 1;
         }
         //     int error = errno;
         opened = open(r->uri, O_RDONLY);
-        if (opened == -1) {
+        if (opened == -1 || resptype == 403) {
             if ((errno == EACCES) || (errno == EISDIR)) {
-                Response *errrep = response_create(403);
-                writeresp(errrep, connfd);
-                response_delete(&errrep);
-                return 1;
+                resptype = 403;
+
+                
             }
             if (errno == ENOENT) {
-                Response *errrep = response_create(404);
-                writeresp(errrep, connfd);
-                response_delete(&errrep);
-
-                return 1;
+                resptype = 404;
+   //             return 1;
             }
-        }
-        int resptype = 200;
-        Response *resp = response_create(resptype);
-        write_file(resp, opened, connfd);
-        response_delete(&resp);
-    }
-    if (types == 2) {
-        if (types == 3) {
-            write(connfd, "Append request\r\n", 20);
-        }
-        return 0;
-    }
+        }else{
+        
+        resptype = 200;
+          
+          printf("strting to try prin\n");
+        int writed = 0;
+        //    int towrite = r->content_len;
+        if (inbufsize >= r->content_len) {
+            printf("writing here too but shouldn");
+         //   writed = write(opened, buffer, r->content_len);
+            strncpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
+            *fromend = inbufsize - r->content_len;
+
+        } else {
+            int totalwrote = 0;
+         //   int remain = 0;
+       //     if (inbufsize != 0) {
+         //       remain = r->content_len - inbufsize;
+        //        write(opened, buffer, inbufsize);
+           // }
+            int readed = 0;
+            totalwrote += inbufsize;
+            char bufftwo[1025] = { '\0' };
+       //     printf("%d, remain, %d, totalwrote", remain, totalwrote);
+            while (totalwrote < r->content_len) {
+        //        printf("stuck here\n");
+    //            printf("%d, remain, %d, totalwrote", remain, totalwrote);
+                //  printf("in the write loop written %d, need to writed %d\n");
+                if (r->content_len - totalwrote >= 1024) {
+                    readed = read(connfd, bufftwo, 1024);
+                    totalwrote += readed;
+                } else {
+                    readed = read(connfd, bufftwo, r->content_len - totalwrote);
+                    totalwrote += readed;
+                }
+                if(readed == 0){
+                    return -1;
+                }
+         //       write(opened, bufftwo, readed);
+                //   printf("%s", bufftwo);
+            }
+   
+  
+         }
+          Response *errrep = response_create(resptype);
+            writeresp(errrep, connfd);
+            response_delete(&errrep);
+         }   
     return 0;
 }
 int execute_append(
