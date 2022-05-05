@@ -183,7 +183,7 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
 
         trackwhere += regs.rm_eo;
     }
-    printf("before end cond we have");
+  //  printf("before end cond we have");
     if (regexec(&done, inbuffer + trackwhere, 0, NULL, 0) == 0) {
         printf("verybadend\n");
         r->badreq = true;
@@ -232,6 +232,7 @@ int headreadstart(
             return -1;
         }
        }
+       timesgone++;
         //     readbuff[readed] = '\0';
         printf("the thing i read in%s\n", readbuff);
         printf("thiswhile1 parsed is %d, %d\n", parser, readcur);
