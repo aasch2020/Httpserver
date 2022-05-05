@@ -45,7 +45,22 @@ void request_update(Request *r, char *match) {
 }
 
 
-void request_cleare(Request *r){
+void request_clear(Request *r){
+      for (int i = 0; i <= r->numheads; i++) {
+        free(r->header_key[i]);
+        free(r->header_vals[i]);
+       }
+             memset(r->uri, '\0',22 );
+             memset(r->uri, '\0',9 );
+             r->numheads = 0;
+             r->badreq = false;
+             r->vernum = -1;
+             r->verdec = -1;
+             r->resptype = 0;
+             r->content_len = -1;
+
+
+
 
 
 }

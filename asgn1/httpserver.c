@@ -134,6 +134,7 @@ void handle_connection(int connfd) {
 
             break;
         }
+        request_clear(r);
         // if(badreq){
         // break;
         // }

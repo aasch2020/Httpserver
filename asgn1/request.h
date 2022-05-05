@@ -9,6 +9,8 @@ int hcreadstart(
     Request *r, int connfd, int inbufsize, int *fromend, char *inbuffer, char *outbuffer);
 void add_header(Request *r, char *header_total);
 
+void request_clear(Request *r);
+
 int add_headderbuff(Request *r, char *buff, int start, int end, int *proced);
 
 void print_req(Request *r);
