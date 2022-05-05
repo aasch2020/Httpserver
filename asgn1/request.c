@@ -149,7 +149,7 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
     regex_t done;
     int prevend = 0;
     if (inbuffer[0] == '\r' && inbuffer[1] == '\n') {
-       // printf("matching early proc parsed = \n", *parsed);
+        printf("matching early proc parsed = %d  we may be done here\n", *parsed);
         *parsed += 2;
         return 0;
     }
