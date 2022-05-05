@@ -22,6 +22,7 @@ int execute_append(
 int type(Request *r);
 int execute_put(
     Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize);
-int execute_get(Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize);
+int execute_get(
+    Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize);
 
 const char *get_uri(Request *r);
