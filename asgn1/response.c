@@ -29,47 +29,39 @@ Response *response_create(int type) {
 
     case 200:
        strcpy(r->statphrase, "OK\r\n");
-        //      r->msgbody = (char *) calloc(4, sizeof(char));
-
-        break;
+            break;
     case 201:
         strcpy(r->statphrase, "Created\r\n");
-        //      r->msgbody = (char *) calloc(9, sizeof(char));
-        addheaderres(r, "Content-Length", "8");
+       addheaderres(r, "Content-Length", "8");
         strcpy(r->msgbody, "Created\n");
         break;
     case 400:
         strcpy(r->statphrase, "Bad Request\r\n");
-        //    r->msgbody = (char *) calloc(13, sizeof(char));
-        addheaderres(r, "Content-Length", "12");
+       addheaderres(r, "Content-Length", "12");
 
         strcpy(r->msgbody, "Bad Request\n");
         break;
     case 403:
         strcpy(r->statphrase, "Forbidden\r\n");
-        //  r->msgbody = (char *) calloc(12, sizeof(char));
-        addheaderres(r, "Content-Length", "10");
+       addheaderres(r, "Content-Length", "10");
         printf("makin a forbiden");
         strcpy(r->msgbody, "Forbidden\n");
         break;
     case 404:
         strcpy(r->statphrase, "Not Found\r\n");
         printf("makin a 404\n");
-        // r->msgbody = (char *) calloc(11, sizeof(char));
-        addheaderres(r, "Content-Length", "10");
+       addheaderres(r, "Content-Length", "10");
         strcpy(r->msgbody, "Not Found\n");
         break;
     case 500:
         strcpy(r->statphrase, "Internal Server Error\r\n");
-        //      r->msgbody = (char *) calloc(20, sizeof(char));
-        addheaderres(r, "Content-Length", "22");
+       addheaderres(r, "Content-Length", "22");
 
         strcpy(r->msgbody, "Internal Server Error\n");
         break;
     case 501:
         strcpy(r->statphrase, "Not Implemented\r\n");
-        //    r->msgbody = (char *) calloc(20, sizeof(char));
-        addheaderres(r, "Content-Length", "20");
+       addheaderres(r, "Content-Length", "20");
 
         strcpy(r->msgbody, "Not Implemented\n");
         break;
@@ -78,9 +70,6 @@ Response *response_create(int type) {
 }
 
 void addheaderres(Response *r, char *header_keyin, char *header_valin) {
-    //    printf("%s\n", header_keyin);
-    //    printf("%s\n", header_valin);
-    //    printf("%d\n", r->numheads);
     r->header_key[r->numheads] = strdup(header_keyin);
     r->header_vals[r->numheads] = strdup(header_valin);
     r->numheads += 1;
@@ -95,8 +84,7 @@ void response_delete(Response **r) {
         free((*r)->header_key[i]);
         free((*r)->header_vals[i]);
     }
-    //   free((*r)->msgbody);
-    free((*r)->header_vals);
+   free((*r)->header_vals);
     free((*r)->header_key);
     free(*r);
 }
