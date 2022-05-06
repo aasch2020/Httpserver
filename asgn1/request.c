@@ -85,7 +85,7 @@ int hcreadstart(
         if (!(inbufsize > 0 && timesgone == 0)) {
             readcur = read(connfd, readbuff + readed, toread - readed);
             if (readcur == 0) {
-               return -1;
+                return -1;
             }
         }
         regcomp(&regm,
@@ -284,7 +284,7 @@ int type(Request *r) {
     }
     if (strcmp(r->type, "PUT") == 0) {
         if (r->content_len == -1) {
-           return 4;
+            return 4;
         }
         return 2;
     }
@@ -357,7 +357,7 @@ int execute_append(
     } else {
         int writed = 0;
         if (inbufsize >= r->content_len) {
-           writed = write(opened, buffer, r->content_len);
+            writed = write(opened, buffer, r->content_len);
             memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
             *fromend = inbufsize - r->content_len;
 
@@ -418,7 +418,7 @@ int execute_put(
             resptype = 403;
             opens = false;
         } else {
-           opens = false;
+            opens = false;
             resptype = 500;
         }
     } else {
