@@ -216,7 +216,7 @@ int headreadstart(
     int parser = 0;
 
     //    regex_t done;
-    regcomp(&regm, "[!-~]+[:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
+    regcomp(&regm, "[!-~]+[0-9a-zA-Z][:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     //    regcomp(&done, "[\r][\n][\r][\r]", REG_EXTENDED|REG_NOSUB);
     //  regmatch_t regs;
     char readbuff[2080] = { '\0' };
@@ -268,8 +268,7 @@ int headreadstart(
 }
 
 void add_header(Request *r, char *header_total) {
-    printf("addin the header from%s\n", header_total);
-    int len = strlen(header_total);
+       int len = strlen(header_total);
     //    printf("%s, thee length is %d\n", header_total, len);
 
     char *header_keyin = (char *) calloc(len + 1, sizeof(char));
@@ -497,7 +496,7 @@ resptype = 500;
 }
 int execute_put(
     Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize) {
-    bool created = true;
+    bool created = false;
     int resptype = 0;
     bool opens = false;
     int opened = open(r->uri + 1, O_WRONLY);
@@ -511,6 +510,8 @@ int execute_put(
             if ((errno == EACCES) || (errno == EISDIR)) {
                              resptype = 403;
                 opens = false;
+            }else{
+                created = true;
             }
         }else
         if ((errno == EACCES) || (errno == EISDIR)) {
@@ -571,7 +572,7 @@ int execute_put(
         close(opened);
     }
 
-    if (created && resptype == 200) {
+    if (created) {
 
         Response *resp = response_create(201);
         writeresp(resp, connfd);
