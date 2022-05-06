@@ -497,29 +497,29 @@ resptype = 500;
 }
 int execute_put(
     Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize) {
-    printf("PUT request with an in buffer of %d\n", inbufsize);
     bool created = true;
     int resptype = 0;
     bool opens = false;
-    int opened = open(r->uri + 1, O_WRONLY | O_CREAT | O_EXCL, 0666);
+    int opened = open(r->uri + 1, O_WRONLY);
     if (opened == -1) {
         printf("not openend right\n");
-        if (errno == EEXIST) {
+        if (errno == ENOENT) {
             printf("the swag thing\n");
             created = false;
             opens = true;
-            opened = open(r->uri + 1, O_WRONLY);
+            opened = open(r->uri + 1, O_WRONLY|O_CREAT);
             if ((errno == EACCES) || (errno == EISDIR)) {
-                printf("bad access somehow\n");
-                resptype = 403;
+                             resptype = 403;
                 opens = false;
             }
         }else
         if ((errno == EACCES) || (errno == EISDIR)) {
-            printf("death");
+          //  printf("death");
             resptype = 403;
             opens = false;
         }else{
+         printf("open bad");
+         opens = false;
         resptype = 500;
       }
     } else {
@@ -571,7 +571,7 @@ int execute_put(
         close(opened);
     }
 
-    if (created) {
+    if (created && resptype == 200) {
 
         Response *resp = response_create(201);
         writeresp(resp, connfd);
