@@ -19,7 +19,6 @@ struct Response {
 
 Response *response_create(int type) {
     Response *r = (Response *) calloc(1, sizeof(Response));
-    printf("the type is %d\n", type);
     r->type = type;
     strcpy(r->httpver, "HTTP/1.1");
     r->numheads = 0;
@@ -29,8 +28,7 @@ Response *response_create(int type) {
     switch (type) {
 
     case 200:
-        printf("switch case 1\n");
-        strcpy(r->statphrase, "OK\r\n");
+       strcpy(r->statphrase, "OK\r\n");
         //      r->msgbody = (char *) calloc(4, sizeof(char));
 
         break;
@@ -87,7 +85,6 @@ void addheaderres(Response *r, char *header_keyin, char *header_valin) {
     r->header_vals[r->numheads] = strdup(header_valin);
     r->numheads += 1;
     if (r->numheads % 30 == 0) {
-        printf("this shouldn't happen\n");
         r->header_key = realloc(r->header_key, (r->numheads + 30) * sizeof(char *));
 
         r->header_vals = realloc(r->header_vals, (r->numheads + 30) * sizeof(char *));
@@ -128,12 +125,8 @@ void write_file(Response *r, int filewrt, int connec) {
     struct stat filestat;
     fstat(filewrt, &filestat);
     char writebuf[2048];
-    //   sprintf(writebuf, "%s %d %s",r->httpver, r->type, r->statphrase);
-
-    //  write(connec, writebuf, strlen(writebuf));
     ssize_t bodylen = 0;
     bodylen += filestat.st_size;
-    //    tathar wrtstr[32];
     int check = bodylen;
     int lengthofstrint = 0;
     while (check > 0) {
@@ -142,7 +135,6 @@ void write_file(Response *r, int filewrt, int connec) {
     }
     char *thebody = (char *) calloc(lengthofstrint + 1, sizeof(char));
     sprintf(thebody, "%zd", bodylen);
-    printf("the length of the body is %zd\n", bodylen);
     addheaderres(r, "Content-Length", thebody);
     writeresp(r, connec);
     int written = 0;
