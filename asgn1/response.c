@@ -64,7 +64,7 @@ Response *response_create(int type) {
     case 500:
         strcpy(r->statphrase, "Internal Server Error\r\n");
         //      r->msgbody = (char *) calloc(20, sizeof(char));
-addheaderres(r, "Content-Length", "22");
+        addheaderres(r, "Content-Length", "22");
 
         strcpy(r->msgbody, "Internal Server Error\n");
         break;

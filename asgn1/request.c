@@ -36,10 +36,10 @@ void request_badflag(Request *r) {
     r->badreq = true;
 }
 void request_update(Request *r, char *match) {
-    r->uri[0] = '.';
+
     //  r->thetotalhead = strndup(match, 40);
     //   printf("update req;");
-    sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri + 1, &(r->vernum), &(r->verdec));
+    sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri, &(r->vernum), &(r->verdec));
 
     print_req(r);
 }
@@ -282,7 +282,7 @@ void add_header(Request *r, char *header_total) {
     }
     r->numheads += 1;
     if (r->numheads % 30 == 0) {
-      //  printf("this shouldn't happen\n");
+        //  printf("this shouldn't happen\n");
         r->header_key = realloc(r->header_key, (r->numheads + 30) * sizeof(char *));
 
         r->header_vals = realloc(r->header_vals, (r->numheads + 30) * sizeof(char *));
@@ -375,7 +375,7 @@ int execute_get(Request *r, int connfd) {
     if (types == 1) {
         printf("doing a get req");
 
-        int opened = open(r->uri, O_RDWR);
+        int opened = open(r->uri + 1, O_RDWR);
         if (errno == EISDIR) {
             Response *errrep = response_create(403);
             writeresp(errrep, connfd);
@@ -383,21 +383,27 @@ int execute_get(Request *r, int connfd) {
             return 1;
         }
         //     int error = errno;
-        opened = open(r->uri, O_RDONLY);
+        opened = open(r->uri + 1, O_RDONLY);
         if (opened == -1) {
             if ((errno == EACCES) || (errno == EISDIR)) {
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
                 response_delete(&errrep);
                 return 1;
-            }
-            if (errno == ENOENT) {
+            }else if (errno == ENOENT) {
                 Response *errrep = response_create(404);
                 writeresp(errrep, connfd);
                 response_delete(&errrep);
 
                 return 1;
-            }
+            }else{
+    Response *errrep = response_create(500);
+                writeresp(errrep, connfd);
+                response_delete(&errrep);
+ return 1;
+
+            
+             }
         }
         int resptype = 200;
         Response *resp = response_create(resptype);
@@ -418,19 +424,22 @@ int execute_append(
     //   bool created = true;
     int resptype = 0;
     printf("%d content length is\n", r->content_len);
-    int opened = open(r->uri, O_WRONLY | O_APPEND);
+    int opened = open(r->uri + 1, O_WRONLY | O_APPEND);
     if (opened == -1) {
         int errord = errno;
         printf("not openend right\n");
         if (errord == ENOENT) {
             resptype = 404;
             //       return 1;
-        }
+        } else
         if ((errord == EACCES) || (errord == EISDIR)) {
             printf("bad access somehow\n");
             resptype = 403;
             //     return 1;
-        }
+        }else{
+
+resptype = 500;
+}
         printf("the error number is %d\n", errord);
 
     } else {
@@ -460,18 +469,18 @@ int execute_append(
                 //  printf("in the write loop written %d, need to writed %d\n");
                 if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
-                                       totalwrote += readed;
+                    totalwrote += readed;
                 } else {
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
                 }
- if(readed == 0){
-                      close(opened);
-                      resptype = 501;
-                      return 1;
-                    }
+                if (readed == 0) {
+                    close(opened);
+                    resptype = 501;
+                    return 1;
+                }
 
-               write(opened, bufftwo, readed);
+                write(opened, bufftwo, readed);
                 //   printf("%s", bufftwo);
             }
         }
@@ -492,25 +501,27 @@ int execute_put(
     bool created = true;
     int resptype = 0;
     bool opens = false;
-    int opened = open(r->uri, O_WRONLY | O_CREAT | O_EXCL, 0666);
+    int opened = open(r->uri + 1, O_WRONLY | O_CREAT | O_EXCL, 0666);
     if (opened == -1) {
         printf("not openend right\n");
         if (errno == EEXIST) {
             printf("the swag thing\n");
             created = false;
             opens = true;
-            opened = open(r->uri, O_WRONLY);
+            opened = open(r->uri + 1, O_WRONLY);
             if ((errno == EACCES) || (errno == EISDIR)) {
                 printf("bad access somehow\n");
                 resptype = 403;
                 opens = false;
             }
-        }
+        }else
         if ((errno == EACCES) || (errno == EISDIR)) {
             printf("death");
             resptype = 403;
             opens = false;
-        }
+        }else{
+        resptype = 500;
+      }
     } else {
         opens = true;
     }
@@ -548,11 +559,11 @@ int execute_put(
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
                 }
-                 if (readed == 0) {
+                if (readed == 0) {
                     return -1;
                 }
 
-               write(opened, bufftwo, readed);
+                write(opened, bufftwo, readed);
                 //   printf("%s", bufftwo);
             }
         }

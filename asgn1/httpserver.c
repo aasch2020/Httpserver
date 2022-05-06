@@ -64,9 +64,9 @@ int read_somechar(int connfd, int numtoread, char *check) {
     while (readed < numtoread) {
         readed += read(connfd, buffer + readed, numtoread - readed);
     }
-    printf("%s\n", buffer);
+    //    printf("%s\n", buffer);
     if (0 == strcmp(buffer, check)) {
-        printf("checked to 1");
+        //      printf("checked to 1");
         free(buffer);
         return 1;
     } else {
@@ -77,34 +77,30 @@ int read_somechar(int connfd, int numtoread, char *check) {
 void handle_connection(int connfd) {
     int fromend = 0;
     int altrend = 0;
-   int chekr = 0;
+    int chekr = 0;
     char onebuff[2048] = { '\0' };
     char twobuff[2048] = { '\0' };
     while (1) {
         chekr = 0;
         r = request_create();
- bool severerr = false;
+        bool severerr = false;
         bool badreq = false;
-        printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
 
         if (hcreadstart(r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
-            printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
             severerr = true;
             break;
         }
-        printf("overreadvalue = %d %s %s\n", altrend, onebuff, twobuff);
         if (-1 == headreadstart(r, connfd, altrend, &fromend, twobuff, onebuff)) {
             severerr = true;
             break;
         }
-        printf("overreadvalue the second = %d %s %s\n", fromend, onebuff, twobuff);
         fflush(stdout);
         int typed = type(r);
         print_req(r);
         switch (typed) {
         case 1: execute_get(r, connfd); break;
         case 3:
-            if ((chekr = execute_append(r, connfd, onebuff, &altrend, twobuff, fromend))== 1) {
+            if ((chekr = execute_append(r, connfd, onebuff, &altrend, twobuff, fromend)) == 1) {
                 fromend = 0;
                 altrend = 0;
                 badreq = true;
@@ -114,7 +110,7 @@ void handle_connection(int connfd) {
 
             break;
         case 2:
-            if ((chekr = execute_put(r, connfd, onebuff, &altrend, twobuff, fromend))== 1) {
+            if ((chekr = execute_put(r, connfd, onebuff, &altrend, twobuff, fromend)) == 1) {
                 fromend = 0;
                 altrend = 0;
                 badreq = true;
@@ -123,12 +119,11 @@ void handle_connection(int connfd) {
             }
             break;
         case 4:
-            printf(" when the request is bad badreq\n");
-            Response *resp = response_create(400);
+             fromend = 0;
+           Response *resp = response_create(400);
             writeresp(resp, connfd);
             response_delete(&resp);
-            fromend = 0;
-            altrend = 0;
+                    altrend = 0;
             badreq = true;
             memset(onebuff, '\0', 2048);
             memset(twobuff, '\0', 2048);
@@ -136,11 +131,11 @@ void handle_connection(int connfd) {
             fflush(stdout);
             break;
         case 0:
-            printf("unimp req");
+            fromend = 0;
             Response *respun = response_create(501);
             writeresp(respun, connfd);
             response_delete(&respun);
-            fromend = 0;
+          
             altrend = 0;
             badreq = true;
             memset(onebuff, '\0', 2048);
@@ -149,8 +144,7 @@ void handle_connection(int connfd) {
             break;
         }
         request_clear(r);
-        // request_delete(&r);
-        if(chekr == -1){
+        if (chekr == -1) {
             Response *respun = response_create(500);
             writeresp(respun, connfd);
             response_delete(&respun);
@@ -160,14 +154,10 @@ void handle_connection(int connfd) {
             memset(onebuff, '\0', 2048);
             memset(twobuff, '\0', 2048);
 
-
-break;
+            break;
         }
-    //    if (badreq) {
-      //      break;
-      //  }
     }
-    printf("\n");
+
     (void) connfd;
 }
 
