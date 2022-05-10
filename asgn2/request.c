@@ -443,13 +443,15 @@ int execute_put(
     Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize, FILE* logfile) {
     bool created = false;
     int resptype = 0;
+    printf("put length %d", r->content_len);
     bool opens = false;
     int opened = open(r->uri + 1, O_WRONLY);
     if (opened == -1) {
+        printf("no file\n");
         if (errno == ENOENT) {
             created = false;
             opens = true;
-            opened = open(r->uri + 1, O_WRONLY | O_CREAT);
+            opened = open(r->uri + 1, O_WRONLY | O_CREAT, S_IRWXU);
             if ((errno == EACCES) || (errno == EISDIR)) {
                 resptype = 403;
                 opens = false;
