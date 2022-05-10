@@ -234,7 +234,7 @@ void add_header(Request *r, char *header_total) {
     if (strcmp(header_keyin, "Content-Length") == 0) {
         r->content_len = atoi(header_valin);
     }
-    if (strcmp(header_keyin, "RequestID") == 0) {
+    if (strcmp(header_keyin, "Request-Id") == 0) {
         r->Reqid = atoi(header_valin);
     }
    
