@@ -27,7 +27,11 @@ struct Request {
 
 void writelog(Request *r, Response *a, FILE* logfile){
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
-    fflush(logfile);
+printf( "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
+ fflush(logfile);
+
+    fflush(stdout);
+
  
   }
 
@@ -426,7 +430,7 @@ int execute_append(
     }
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
-writelog(r, resp,logfile);
+writelog(r, resp, logfile);
 
 
     response_delete(&resp);
