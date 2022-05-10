@@ -26,7 +26,7 @@ struct Request {
 };
 
 void writelog(Request *r, Response *a, FILE* logfile){
-    fprintf(logfile, "%s, %s, %d, %d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
+    fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
     fflush(logfile);
  
   }
