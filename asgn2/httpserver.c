@@ -78,7 +78,13 @@ int fromend = 0;
         r = request_create();
         severerr = false;
         badreq = false;
-        
+         altrend = 0;
+        fromend = 0;
+        //    badreq = true;
+            memset(onebuff, '\0', 2048);
+            memset(twobuff, '\0', 2048);
+
+
         if (hcreadstart(r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
             severerr = true;
             break;
