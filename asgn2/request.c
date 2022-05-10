@@ -27,10 +27,9 @@ struct Request {
 
 void writelog(Request *r, Response *a, FILE* logfile){
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
-printf( "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
- fflush(logfile);
+//printf( "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
 
-    fflush(stdout);
+  //  fflush(stdout);
 
  
   }
@@ -443,7 +442,7 @@ int execute_put(
     Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize, FILE* logfile) {
     bool created = false;
     int resptype = 0;
-    printf("put length %d", r->content_len);
+ //   printf("put length %d", r->content_len);
     bool opens = false;
     int opened = open(r->uri + 1, O_RDWR|O_TRUNC);
     if (opened == -1) {

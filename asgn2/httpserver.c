@@ -24,7 +24,8 @@ static FILE *logfile;
  Request *r;
  
 void sighand() {
- fclose(logfile);
+ fflush(logfile);
+
 
       request_delete(&r);
       exit(1);
@@ -164,6 +165,8 @@ int fromend = 0;
 static void sigterm_handler(int sig) {
     if (sig == SIGTERM) {
         warnx("received SIGTERM");
+ fclose(logfile);
+
         fclose(logfile);
       request_delete(&r);
 
