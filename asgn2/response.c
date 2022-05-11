@@ -27,7 +27,7 @@ Response *response_create(int type) {
 
     switch (type) {
 
-    case 200: strcpy(r->statphrase, "OK\r\n"); break;
+    case 200: strcpy(r->statphrase, "Ok\r\n"); break;
     case 201:
         strcpy(r->statphrase, "Created\r\n");
         addheaderres(r, "Content-Length", "8");
