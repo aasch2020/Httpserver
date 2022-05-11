@@ -11,28 +11,13 @@
 #include "response.h"
 #include <unistd.h>
 #include <fcntl.h>
-struct Request {
-    char type[9], uri[22];
-    unsigned int vernum;
-    unsigned int verdec;
-    char **header_key;
-    char **header_vals;
-    int numheads;
-    int content_len;
-    bool badreq;
-    int resptype;
-    int Reqid;
-    //    char* thetotalhead;
-};
-
-void writelog(Request *r, Response *a, FILE* logfile){
+void writelog(Request *r, Response *a, FILE *logfile) {
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
-//printf( "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
+    //printf( "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
 
-  //  fflush(stdout);
+    //  fflush(stdout);
+}
 
- 
-  }
 
 Request *request_create() {
     Request *r = (Request *) calloc(1, sizeof(Request));
@@ -46,45 +31,68 @@ Request *request_create() {
     r->Reqid = 0;
     return r;
 }
+
 void request_badflag(Request *r) {
     r->badreq = true;
 }
 
-int reqid(Request *r){
-  return r->Reqid;
-
+int reqid(Request *r) {
+    return r->Reqid;
 }
 void request_update(Request *r, char *match) {
+//r->header_key = (char **) calloc(30, sizeof(char *));
+  //  r->header_vals = (char **) calloc(30, sizeof(char *));
+    
     sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri, &(r->vernum), &(r->verdec));
 }
-
-
-void request_clear(Request *r) {
-    for (int i = 0; i < r->numheads; i++) {
-        free(r->header_key[i]);
-        free(r->header_vals[i]);
-    }
-    memset(r->uri, '\0', 22);
-    memset(r->uri, '\0', 9);
+void request_init(Request *r){
+ r->header_key = (char **) calloc(30, sizeof(char *));
+    r->header_vals = (char **) calloc(30, sizeof(char *));
+    
+     r->numheads = 0;
+    r->content_len = -1;
     r->numheads = 0;
     r->badreq = false;
-    r->vernum = -1;
-    r->verdec = -1;
-    r->Reqid = 0;
     r->resptype = 0;
+    r->Reqid = 0;
+  }
+void request_clear(Request *r) {
+
     r->content_len = -1;
+  //  r->numheads = 0;
+    r->badreq = false;
+    r->resptype = 0;
+    r->Reqid = 0;
+    
+    for (int i = 0; i <= r->numheads; i++) {
+    printf("freeing a header\n");
+        free(r->header_key[i]);
+        free(r->header_vals[i]);
+     r->header_key[i] = NULL;
+        r->header_vals[i] = NULL;
+
+    }
+    r->numheads = 0;
+ free(r->header_key);
+       free(r->header_vals);
+   
+
 }
 void request_delete(Request **r) {
+    printf("bad delete\n");
+   
     if (*r != NULL) {
-        for (int i = 0; i < ((*r)->numheads); i++) {
+        printf("actually fucking deleting\n");
+        for (int i = 0; i <= ((*r)->numheads); i++) {
             free((*r)->header_key[i]);
             free((*r)->header_vals[i]);
         }
-        free((*r)->header_vals);
-        free((*r)->header_key);
+  //      free((*r)->header_vals);
+    //    free((*r)->header_key);
         free(*r);
         *r = NULL;
     }
+ fflush(stdin);
 }
 int hcreadstart(
     Request *r, int connfd, int inbufsize, int *fromend, char *inbuffer, char *outbuffer) {
@@ -231,22 +239,20 @@ void add_header(Request *r, char *header_total) {
     int len = strlen(header_total);
     char *header_keyin = (char *) calloc(len + 1, sizeof(char));
     char *header_valin = (char *) calloc(len + 1, sizeof(char));
+   r->numheads++;
+
     sscanf(header_total, "%[^':']: %[^'\r']", header_keyin, header_valin);
     r->header_key[r->numheads] = header_keyin;
     r->header_vals[r->numheads] = header_valin;
+//free(header_keyin);
+//free(header_valin);
     if (strcmp(header_keyin, "Content-Length") == 0) {
         r->content_len = atoi(header_valin);
     }
     if (strcmp(header_keyin, "Request-Id") == 0) {
         r->Reqid = atoi(header_valin);
     }
-   
-    r->numheads += 1;
-    if (r->numheads % 30 == 0) {
-        r->header_key = realloc(r->header_key, (r->numheads + 30) * sizeof(char *));
 
-        r->header_vals = realloc(r->header_vals, (r->numheads + 30) * sizeof(char *));
-    }
 }
 
 void print_req(Request *r) {
@@ -330,14 +336,13 @@ const char *get_type(Request *r) {
     return r->type;
 }
 
-
-int execute_get(Request *r, int connfd, FILE* logfile) {
+int execute_get(Request *r, int connfd, FILE *logfile) {
     int types = type(r);
     if (types == 1) {
         int opened = open(r->uri + 1, O_RDWR);
         if (errno == EISDIR) {
             Response *errrep = response_create(403);
-writelog(r, errrep,logfile);
+            writelog(r, errrep, logfile);
             writeresp(errrep, connfd);
             response_delete(&errrep);
             return 1;
@@ -348,14 +353,14 @@ writelog(r, errrep,logfile);
             if ((errno == EACCES) || (errno == EISDIR)) {
                 Response *errrep = response_create(403);
                 writeresp(errrep, connfd);
-writelog(r, errrep,logfile);
+                writelog(r, errrep, logfile);
 
                 response_delete(&errrep);
                 return 1;
             } else if (errno == ENOENT) {
                 Response *errrep = response_create(404);
                 writeresp(errrep, connfd);
-writelog(r, errrep,logfile);
+                writelog(r, errrep, logfile);
 
                 response_delete(&errrep);
 
@@ -363,7 +368,7 @@ writelog(r, errrep,logfile);
             } else {
                 Response *errrep = response_create(500);
                 writeresp(errrep, connfd);
-writelog(r, errrep,logfile);
+                writelog(r, errrep, logfile);
 
                 response_delete(&errrep);
                 return 1;
@@ -372,14 +377,14 @@ writelog(r, errrep,logfile);
         int resptype = 200;
         Response *resp = response_create(resptype);
         write_file(resp, opened, connfd);
-writelog(r, resp,logfile);
+        writelog(r, resp, logfile);
 
         response_delete(&resp);
     }
     return 0;
 }
-int execute_append(
-    Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize, FILE* logfile) {
+int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf,
+    int inbufsize, FILE *logfile) {
     int resptype = 0;
     int opened = open(r->uri + 1, O_RDWR | O_APPEND);
     if (opened == -1) {
@@ -429,8 +434,7 @@ int execute_append(
     }
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
-writelog(r, resp, logfile);
-
+    writelog(r, resp, logfile);
 
     response_delete(&resp);
     if (resptype != 200) {
@@ -438,13 +442,13 @@ writelog(r, resp, logfile);
     }
     return 0;
 }
-int execute_put(
-    Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf, int inbufsize, FILE* logfile) {
+int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf,
+    int inbufsize, FILE *logfile) {
     bool created = false;
     int resptype = 0;
- //   printf("put length %d", r->content_len);
+    //   printf("put length %d", r->content_len);
     bool opens = false;
-    int opened = open(r->uri + 1, O_RDWR|O_TRUNC);
+    int opened = open(r->uri + 1, O_RDWR | O_TRUNC);
     if (opened == -1) {
         printf("no file\n");
         if (errno == ENOENT) {
@@ -505,8 +509,7 @@ int execute_put(
 
         Response *resp = response_create(201);
         writeresp(resp, connfd);
-writelog(r, resp,logfile);
-
+        writelog(r, resp, logfile);
 
         response_delete(&resp);
 
@@ -514,8 +517,7 @@ writelog(r, resp,logfile);
 
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
-writelog(r, resp,logfile);
-
+        writelog(r, resp, logfile);
 
         response_delete(&resp);
     }

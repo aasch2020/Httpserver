@@ -42,12 +42,12 @@ Response *response_create(int type) {
     case 403:
         strcpy(r->statphrase, "Forbidden\r\n");
         addheaderres(r, "Content-Length", "10");
-       // printf("makin a forbiden");
+        // printf("makin a forbiden");
         strcpy(r->msgbody, "Forbidden\n");
         break;
     case 404:
         strcpy(r->statphrase, "Not Found\r\n");
-    //    printf("makin a 404\n");
+        //    printf("makin a 404\n");
         addheaderres(r, "Content-Length", "10");
         strcpy(r->msgbody, "Not Found\n");
         break;
@@ -106,10 +106,9 @@ void writeresp(Response *r, int connec) {
     write(connec, r->msgbody, strlen(r->msgbody));
     free(writebuf);
 }
-int resptype(Response *r){
-  
-   return r->type; 
-  
+int resptype(Response *r) {
+
+    return r->type;
 }
 void write_file(Response *r, int filewrt, int connec) {
     struct stat filestat;

@@ -1,11 +1,11 @@
-#include <err.h>
-#include <fcntl.h>
+
 #include <inttypes.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <err.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -21,13 +21,14 @@ static FILE *logfile;
 #define LOG(...) fprintf(logfile, __VA_ARGS__);
 
 
- Request *r;
+struct Request r;
  
 void sighand() {
  fflush(logfile);
-
-
-      request_delete(&r);
+ printf("sighanded");
+fclose(logfile);
+fflush(stdout);
+//      request_clear(&r);
       exit(1);
   }
 
@@ -72,11 +73,10 @@ int fromend = 0;
     char twobuff[2048] = { '\0' };
         bool severerr = false;
         bool badreq = false;
-
-
+// struct Request r;
+ request_init(&r);   
     while (1) {
         chekr = 0;
-        r = request_create();
         severerr = false;
         badreq = false;
          altrend = 0;
@@ -86,19 +86,19 @@ int fromend = 0;
             memset(twobuff, '\0', 2048);
 
 
-        if (hcreadstart(r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
+        if (hcreadstart(&r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
             severerr = true;
             break;
         }
-        if (-1 == headreadstart(r, connfd, altrend, &fromend, twobuff, onebuff)) {
+        if (-1 == headreadstart(&r, connfd, altrend, &fromend, twobuff, onebuff)) {
             severerr = true;
             break;
         }
-        int typed = type(r);
+        int typed = type(&r);
         switch (typed) {
-        case 1: execute_get(r, connfd, logfile); break;
+        case 1: execute_get(&r, connfd, logfile); break;
         case 3:
-            if ((chekr = execute_append(r, connfd, onebuff, &altrend, twobuff, fromend, logfile)) == 1) {
+            if ((chekr = execute_append(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile)) == 1) {
                 fromend = 0;
                 altrend = 0;
                 badreq = true;
@@ -108,7 +108,7 @@ int fromend = 0;
 
             break;
         case 2:
-            if ((chekr = execute_put(r, connfd, onebuff, &altrend, twobuff, fromend, logfile)) == 1) {
+            if ((chekr = execute_put(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile)) == 1) {
                 fromend = 0;
                 altrend = 0;
                 badreq = true;
@@ -141,7 +141,7 @@ int fromend = 0;
 
             break;
         }
-        request_clear(r);
+        request_clear(&r);
         if (chekr == -1) {
             Response *respun = response_create(500);
             writeresp(respun, connfd);
@@ -165,10 +165,11 @@ int fromend = 0;
 static void sigterm_handler(int sig) {
     if (sig == SIGTERM) {
         warnx("received SIGTERM");
+
  fclose(logfile);
 
         fclose(logfile);
-      request_delete(&r);
+     // request_clear(&r);
 
         exit(EXIT_SUCCESS);
     }
@@ -215,6 +216,7 @@ int main(int argc, char *argv[]) {
     }
 
     signal(SIGPIPE, SIG_IGN);
+signal(SIGINT, sighand);
     signal(SIGTERM, sigterm_handler);
 
     int listenfd = create_listen_socket(port);
