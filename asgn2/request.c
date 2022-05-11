@@ -474,6 +474,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     if (opens) {
         int writed = 0;
         if (inbufsize >= r->content_len) {
+            printf("printing more than cnt len\n");
             writed = write(opened, buffer, r->content_len);
             memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
             *fromend = inbufsize - r->content_len;
@@ -482,21 +483,30 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
             int totalwrote = 0;
             if (inbufsize != 0) {
                 write(opened, buffer, inbufsize);
-            }
+               printf("in buf size is %d\n", inbufsize);
+             }
+
             int readed = 0;
             totalwrote += inbufsize;
-            char bufftwo[1025] = { '\0' };
+           // int writeloggerput = open("writelogd.txt", O_RDWR|O_TRUNC);
+            char bufftwo[2048] = { '\0' };
+            
             while (totalwrote < r->content_len) {
                 if (r->content_len - totalwrote >= 1024) {
+                    printf("cntlen read");
+             //       write(writeloggerput, "First\n", 6);
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += readed;
                 } else {
+                    printf("rembuff read %d\n", r->content_len - totalwrote);
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
+// write(writeloggerput, "second\n", 7);
                 }
                 if (readed == 0) {
                     return -1;
                 }
+//write(writeloggerput, bufftwo, readed);
 
                 write(opened, bufftwo, readed);
             }

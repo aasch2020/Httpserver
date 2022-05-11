@@ -94,7 +94,7 @@ void writeresp(Response *r, int connec) {
     write(connec, writebuf, len);
     if ((r->type == 200) && (r->numheads == 0)) {
         addheaderres(r, "Content-Length", "3");
-        strcpy(r->msgbody, "Ok\n");
+        strcpy(r->msgbody, "OK\n");
     }
     for (int i = 0; i < r->numheads; i++) {
         write(connec, r->header_key[i], strlen(r->header_key[i]));
