@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <err.h>
@@ -11,7 +12,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "request.h"
-  #include "response.h"
+#include "response.h"
 #include <stdbool.h>
 #define OPTIONS              "t:l:"
 #define BUF_SIZE             4096
@@ -20,18 +21,16 @@
 static FILE *logfile;
 #define LOG(...) fprintf(logfile, __VA_ARGS__);
 
-
 struct Request r;
- 
-void sighand() {
- fflush(logfile);
- printf("sighanded");
-fclose(logfile);
-fflush(stdout);
-//      request_clear(&r);
-      exit(1);
-  }
 
+void sighand() {
+    fflush(logfile);
+    printf("sighanded");
+    fclose(logfile);
+    fflush(stdout);
+    //      request_clear(&r);
+    exit(1);
+}
 
 // Converts a string to an 16 bits unsigned integer.
 // Returns 0 if the string is malformed or out of the range.
@@ -65,26 +64,26 @@ static int create_listen_socket(uint16_t port) {
     return listenfd;
 }
 static void handle_connection(int connfd) {
-//   logfile = fopen(logfile, "w");
-int fromend = 0;
+    //   logfile = fopen(logfile, "w");
+    int fromend = 0;
     int altrend = 0;
     int chekr = 0;
     char onebuff[2048] = { '\0' };
     char twobuff[2048] = { '\0' };
-        bool severerr = false;
-        bool badreq = false;
-// struct Request r;
- request_init(&r);   
+    bool severerr = false;
+    bool badreq = false;
+    // struct Request r;
+    int buffertestfile = open("buffertest.txt", O_RDWR|O_TRUNC);
+    request_init(&r);
     while (1) {
         chekr = 0;
         severerr = false;
         badreq = false;
-         altrend = 0;
+        altrend = 0;
         fromend = 0;
         //    badreq = true;
-            memset(onebuff, '\0', 2048);
-            memset(twobuff, '\0', 2048);
-
+        //           memset(onebuff, '\0', 2048);
+        //          memset(twobuff, '\0', 2048);
 
         if (hcreadstart(&r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
             severerr = true;
@@ -94,11 +93,15 @@ int fromend = 0;
             severerr = true;
             break;
         }
+        write(buffertestfile, onebuff,2048);
+ write(buffertestfile,twobuff, 2048);
+        printf("the overwrite into the writing request = %d %d\n", altrend, fromend);
         int typed = type(&r);
         switch (typed) {
         case 1: execute_get(&r, connfd, logfile); break;
         case 3:
-            if ((chekr = execute_append(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile)) == 1) {
+            if ((chekr = execute_append(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile))
+                == 1) {
                 fromend = 0;
                 altrend = 0;
                 badreq = true;
@@ -108,7 +111,8 @@ int fromend = 0;
 
             break;
         case 2:
-            if ((chekr = execute_put(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile)) == 1) {
+            if ((chekr = execute_put(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile))
+                == 1) {
                 fromend = 0;
                 altrend = 0;
                 badreq = true;
@@ -155,21 +159,18 @@ int fromend = 0;
             break;
         }
     }
-
+   close(buffertestfile);
     (void) connfd;
-
-  
-
 }
 
 static void sigterm_handler(int sig) {
     if (sig == SIGTERM) {
         warnx("received SIGTERM");
 
- fclose(logfile);
+        fclose(logfile);
 
         fclose(logfile);
-     // request_clear(&r);
+        // request_clear(&r);
 
         exit(EXIT_SUCCESS);
     }
@@ -178,8 +179,6 @@ static void sigterm_handler(int sig) {
 static void usage(char *exec) {
     fprintf(stderr, "usage: %s [-t threads] [-l logfile] <port>\n", exec);
 }
-
-
 
 int main(int argc, char *argv[]) {
     int opt = 0;
@@ -216,11 +215,11 @@ int main(int argc, char *argv[]) {
     }
 
     signal(SIGPIPE, SIG_IGN);
-signal(SIGINT, sighand);
+    signal(SIGINT, sighand);
     signal(SIGTERM, sigterm_handler);
 
     int listenfd = create_listen_socket(port);
-//    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
+    //    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
 
     for (;;) {
         int connfd = accept(listenfd, NULL, NULL);
@@ -234,4 +233,3 @@ signal(SIGINT, sighand);
 
     return EXIT_SUCCESS;
 }
-

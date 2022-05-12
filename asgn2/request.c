@@ -14,10 +14,9 @@
 void writelog(Request *r, Response *a, FILE *logfile) {
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
     //printf( "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
-fflush(logfile);
+    fflush(logfile);
     //  fflush(stdout);
 }
-
 
 Request *request_create() {
     Request *r = (Request *) calloc(1, sizeof(Request));
@@ -40,59 +39,56 @@ int reqid(Request *r) {
     return r->Reqid;
 }
 void request_update(Request *r, char *match) {
-//r->header_key = (char **) calloc(30, sizeof(char *));
-  //  r->header_vals = (char **) calloc(30, sizeof(char *));
-    
+    //r->header_key = (char **) calloc(30, sizeof(char *));
+    //  r->header_vals = (char **) calloc(30, sizeof(char *));
+
     sscanf(match, "%8[a-zA-Z] %22s HTTP/%u.%u", r->type, r->uri, &(r->vernum), &(r->verdec));
 }
-void request_init(Request *r){
- r->header_key = (char **) calloc(30, sizeof(char *));
+void request_init(Request *r) {
+    r->header_key = (char **) calloc(30, sizeof(char *));
     r->header_vals = (char **) calloc(30, sizeof(char *));
-    
-     r->numheads = 0;
+
+    r->numheads = 0;
     r->content_len = -1;
     r->numheads = 0;
     r->badreq = false;
     r->resptype = 0;
     r->Reqid = 0;
-  }
+}
 void request_clear(Request *r) {
 
     r->content_len = -1;
-  //  r->numheads = 0;
+    //  r->numheads = 0;
     r->badreq = false;
     r->resptype = 0;
     r->Reqid = 0;
-    
+
     for (int i = 0; i <= r->numheads; i++) {
-    printf("freeing a header\n");
+        printf("freeing a header\n");
         free(r->header_key[i]);
         free(r->header_vals[i]);
-     r->header_key[i] = NULL;
+        r->header_key[i] = NULL;
         r->header_vals[i] = NULL;
-
     }
     r->numheads = 0;
- free(r->header_key);
-       free(r->header_vals);
-   
-
+    free(r->header_key);
+    free(r->header_vals);
 }
 void request_delete(Request **r) {
     printf("bad delete\n");
-   
+
     if (*r != NULL) {
         printf("actually fucking deleting\n");
         for (int i = 0; i <= ((*r)->numheads); i++) {
             free((*r)->header_key[i]);
             free((*r)->header_vals[i]);
         }
-  //      free((*r)->header_vals);
-    //    free((*r)->header_key);
+        //      free((*r)->header_vals);
+        //    free((*r)->header_key);
         free(*r);
         *r = NULL;
     }
- fflush(stdin);
+    fflush(stdin);
 }
 int hcreadstart(
     Request *r, int connfd, int inbufsize, int *fromend, char *inbuffer, char *outbuffer) {
@@ -208,7 +204,7 @@ int headreadstart(
     regcomp(&regm, "[!-~]+[0-9a-zA-Z][:][ ]+[!-~]+[\r][\n]", REG_EXTENDED);
     char readbuff[2080] = { '\0' };
     int readed = 0;
-    strncpy(readbuff, inbuffer, inbufsize);
+    memcpy(readbuff, inbuffer, inbufsize);
     readed += inbufsize;
     int readcur = 0;
     bool found = false;
@@ -227,7 +223,7 @@ int headreadstart(
         if (check == 0) {
             *fromend = readed - parser;
             regfree(&regm);
-            strncpy(outbuffer, readbuff + parser, readed - parser);
+            memcpy(outbuffer, readbuff + parser, readed - parser);
             return 1;
         }
     }
@@ -239,20 +235,19 @@ void add_header(Request *r, char *header_total) {
     int len = strlen(header_total);
     char *header_keyin = (char *) calloc(len + 1, sizeof(char));
     char *header_valin = (char *) calloc(len + 1, sizeof(char));
-   r->numheads++;
+    r->numheads++;
 
     sscanf(header_total, "%[^':']: %[^'\r']", header_keyin, header_valin);
     r->header_key[r->numheads] = header_keyin;
     r->header_vals[r->numheads] = header_valin;
-//free(header_keyin);
-//free(header_valin);
+    //free(header_keyin);
+    //free(header_valin);
     if (strcmp(header_keyin, "Content-Length") == 0) {
         r->content_len = atoi(header_valin);
     }
     if (strcmp(header_keyin, "Request-Id") == 0) {
         r->Reqid = atoi(header_valin);
     }
-
 }
 
 void print_req(Request *r) {
@@ -399,42 +394,57 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
         }
     } else {
         int writed = 0;
+
         if (inbufsize >= r->content_len) {
             writed = write(opened, buffer, r->content_len);
             memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
-            *fromend = inbufsize - r->content_len;
 
+            *fromend = inbufsize - r->content_len;
         } else {
             int totalwrote = 0;
+    //        int writeloggerput = open("writelogd.txt", O_WRONLY | O_TRUNC);
+
             if (inbufsize != 0) {
+
                 write(opened, buffer, inbufsize);
+        //        printf("in buf size is %d\n", inbufsize);
+      //          write(writeloggerput, buffer, inbufsize);
             }
-            int readed = 0;
+            ssize_t readed = 0;
             totalwrote += inbufsize;
-            char bufftwo[1025] = { '\0' };
+            char bufftwo[2048] = { '\0' };
             while (totalwrote < r->content_len) {
                 if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += readed;
+         //           printf("cntlen read");
+           //                           write(writeloggerput, "First\n", 6);
+
                 } else {
+
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
+             //       printf("rembuff read %d\n", r->content_len - totalwrote);
+
                     totalwrote += readed;
                 }
+                write(opened, bufftwo, readed);
+            //    printf("weird readed nuumber is %zd\n", readed);
+          //      write(writeloggerput, bufftwo, readed);
+
                 if (readed == 0) {
                     close(opened);
                     resptype = 501;
                     return 1;
-                }
-
-                write(opened, bufftwo, readed);
+                 }
+                 readed = 0;
             }
         }
         resptype = 200;
-        close(opened);
-    }
+         }
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
     writelog(r, resp, logfile);
+   close(opened);
 
     response_delete(&resp);
     if (resptype != 200) {
@@ -474,47 +484,54 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     if (opens) {
         int writed = 0;
         if (inbufsize >= r->content_len) {
-            printf("printing more than cnt len\n");
+//            printf("printing more than cnt len\n");
             writed = write(opened, buffer, r->content_len);
             memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
             *fromend = inbufsize - r->content_len;
-
         } else {
             int totalwrote = 0;
+  //          int writeloggerput = open("writelogdput.txt", O_RDWR | O_TRUNC);
+
             if (inbufsize != 0) {
                 write(opened, buffer, inbufsize);
-               printf("in buf size is %d\n", inbufsize);
-             }
+                printf("in buf size is %d\n", inbufsize);
+      //          write(writeloggerput, "start\n", 6);
+        //        write(writeloggerput, buffer, inbufsize);
+            }
 
-            int readed = 0;
+            ssize_t readed = 0;
             totalwrote += inbufsize;
-           // int writeloggerput = open("writelogd.txt", O_RDWR|O_TRUNC);
             char bufftwo[2048] = { '\0' };
-            
+
             while (totalwrote < r->content_len) {
                 if (r->content_len - totalwrote >= 1024) {
                     printf("cntlen read");
-             //       write(writeloggerput, "First\n", 6);
+          //                            write(writeloggerput, "First\n", 6);
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += readed;
                 } else {
                     printf("rembuff read %d\n", r->content_len - totalwrote);
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
-// write(writeloggerput, "second\n", 7);
+    //                 write(writeloggerput, "second\n", 7);
                 }
+                write(opened, bufftwo, readed);
+                printf("weird readed nuumber is %zd\n", readed);
+  //              write(writeloggerput, bufftwo, readed);
+
                 if (readed == 0) {
+      close(opened);
+//close(writeloggerput);
                     return -1;
                 }
-//write(writeloggerput, bufftwo, readed);
-
-                write(opened, bufftwo, readed);
+                readed = 0;
             }
+//close(writeloggerput);
+
         }
         resptype = 200;
-        close(opened);
-    }
-
+      }
+      close(opened);
     if (created) {
 
         Response *resp = response_create(201);
