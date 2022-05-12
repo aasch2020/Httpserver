@@ -402,13 +402,13 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
             *fromend = inbufsize - r->content_len;
         } else {
             int totalwrote = 0;
-    //        int writeloggerput = open("writelogd.txt", O_WRONLY | O_TRUNC);
+            //        int writeloggerput = open("writelogd.txt", O_WRONLY | O_TRUNC);
 
             if (inbufsize != 0) {
 
                 write(opened, buffer, inbufsize);
-        //        printf("in buf size is %d\n", inbufsize);
-      //          write(writeloggerput, buffer, inbufsize);
+                //        printf("in buf size is %d\n", inbufsize);
+                //          write(writeloggerput, buffer, inbufsize);
             }
             ssize_t readed = 0;
             totalwrote += inbufsize;
@@ -417,34 +417,34 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
                 if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += readed;
-         //           printf("cntlen read");
-           //                           write(writeloggerput, "First\n", 6);
+                    //           printf("cntlen read");
+                    //                           write(writeloggerput, "First\n", 6);
 
                 } else {
 
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
-             //       printf("rembuff read %d\n", r->content_len - totalwrote);
+                    //       printf("rembuff read %d\n", r->content_len - totalwrote);
 
                     totalwrote += readed;
                 }
                 write(opened, bufftwo, readed);
-            //    printf("weird readed nuumber is %zd\n", readed);
-          //      write(writeloggerput, bufftwo, readed);
+                //    printf("weird readed nuumber is %zd\n", readed);
+                //      write(writeloggerput, bufftwo, readed);
 
                 if (readed == 0) {
                     close(opened);
                     resptype = 501;
                     return 1;
-                 }
-                 readed = 0;
+                }
+                readed = 0;
             }
         }
         resptype = 200;
-         }
+    }
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
     writelog(r, resp, logfile);
-   close(opened);
+    close(opened);
 
     response_delete(&resp);
     if (resptype != 200) {
@@ -484,19 +484,19 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     if (opens) {
         int writed = 0;
         if (inbufsize >= r->content_len) {
-//            printf("printing more than cnt len\n");
+            //            printf("printing more than cnt len\n");
             writed = write(opened, buffer, r->content_len);
             memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
             *fromend = inbufsize - r->content_len;
         } else {
             int totalwrote = 0;
-  //          int writeloggerput = open("writelogdput.txt", O_RDWR | O_TRUNC);
+            //          int writeloggerput = open("writelogdput.txt", O_RDWR | O_TRUNC);
 
             if (inbufsize != 0) {
                 write(opened, buffer, inbufsize);
                 printf("in buf size is %d\n", inbufsize);
-      //          write(writeloggerput, "start\n", 6);
-        //        write(writeloggerput, buffer, inbufsize);
+                //          write(writeloggerput, "start\n", 6);
+                //        write(writeloggerput, buffer, inbufsize);
             }
 
             ssize_t readed = 0;
@@ -506,32 +506,31 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
             while (totalwrote < r->content_len) {
                 if (r->content_len - totalwrote >= 1024) {
                     printf("cntlen read");
-          //                            write(writeloggerput, "First\n", 6);
+                    //                            write(writeloggerput, "First\n", 6);
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += readed;
                 } else {
                     printf("rembuff read %d\n", r->content_len - totalwrote);
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
-    //                 write(writeloggerput, "second\n", 7);
+                    //                 write(writeloggerput, "second\n", 7);
                 }
                 write(opened, bufftwo, readed);
                 printf("weird readed nuumber is %zd\n", readed);
-  //              write(writeloggerput, bufftwo, readed);
+                //              write(writeloggerput, bufftwo, readed);
 
                 if (readed == 0) {
-      close(opened);
-//close(writeloggerput);
+                    close(opened);
+                    //close(writeloggerput);
                     return -1;
                 }
                 readed = 0;
             }
-//close(writeloggerput);
-
+            //close(writeloggerput);
         }
         resptype = 200;
-      }
-      close(opened);
+    }
+    close(opened);
     if (created) {
 
         Response *resp = response_create(201);

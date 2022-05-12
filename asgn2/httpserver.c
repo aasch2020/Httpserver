@@ -73,7 +73,7 @@ static void handle_connection(int connfd) {
     bool severerr = false;
     bool badreq = false;
     // struct Request r;
-    int buffertestfile = open("buffertest.txt", O_RDWR|O_TRUNC);
+    int buffertestfile = open("buffertest.txt", O_RDWR | O_TRUNC);
     request_init(&r);
     while (1) {
         chekr = 0;
@@ -93,8 +93,8 @@ static void handle_connection(int connfd) {
             severerr = true;
             break;
         }
-        write(buffertestfile, onebuff,2048);
- write(buffertestfile,twobuff, 2048);
+        write(buffertestfile, onebuff, 2048);
+        write(buffertestfile, twobuff, 2048);
         printf("the overwrite into the writing request = %d %d\n", altrend, fromend);
         int typed = type(&r);
         switch (typed) {
@@ -159,7 +159,7 @@ static void handle_connection(int connfd) {
             break;
         }
     }
-   close(buffertestfile);
+    close(buffertestfile);
     (void) connfd;
 }
 
