@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <pthread.h>
 #include <unistd.h>
 #include "request.h"
 #include "response.h"
@@ -217,7 +218,7 @@ int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sighand);
     signal(SIGTERM, sigterm_handler);
-
+    pthread_t threadq[128];
     int listenfd = create_listen_socket(port);
     //    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
 
@@ -227,6 +228,7 @@ int main(int argc, char *argv[]) {
             warn("accept error");
             continue;
         }
+        printf("tkaing a connection %d\n", connfd);
         handle_connection(connfd);
         close(connfd);
     }
