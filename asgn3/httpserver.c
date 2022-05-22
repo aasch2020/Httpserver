@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include "request.h"
 #include "response.h"
+#include ""
 #include <stdbool.h>
 #define OPTIONS              "t:l:"
 #define BUF_SIZE             4096
@@ -22,7 +23,6 @@
 static FILE *logfile;
 #define LOG(...) fprintf(logfile, __VA_ARGS__);
 
-struct Request r;
 
 void sighand() {
     fflush(logfile);
@@ -66,6 +66,8 @@ static int create_listen_socket(uint16_t port) {
 }
 static void handle_connection(int connfd) {
     //   logfile = fopen(logfile, "w");
+struct Request r;
+
     int fromend = 0;
     int altrend = 0;
     int chekr = 0;
@@ -181,6 +183,9 @@ static void usage(char *exec) {
     fprintf(stderr, "usage: %s [-t threads] [-l logfile] <port>\n", exec);
 }
 
+pthread_mutex_t buffer = PTHREAD_MUTEX_INITIALIZER;
+
+pthread_mutex_t qlock;
 int main(int argc, char *argv[]) {
     int opt = 0;
     int threads = DEFAULT_THREAD_COUNT;
@@ -214,14 +219,14 @@ int main(int argc, char *argv[]) {
     if (port == 0) {
         errx(EXIT_FAILURE, "bad port number: %s", argv[1]);
     }
-
+    
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sighand);
     signal(SIGTERM, sigterm_handler);
-    pthread_t threadq[128];
+    pthread_t* threadq = (pthread_t*)calloc(threads, sizeof(pthread_t));
     int listenfd = create_listen_socket(port);
     //    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
-
+    
     for (;;) {
         int connfd = accept(listenfd, NULL, NULL);
         if (connfd < 0) {
@@ -229,8 +234,9 @@ int main(int argc, char *argv[]) {
             continue;
         }
         printf("tkaing a connection %d\n", connfd);
-        handle_connection(connfd);
-        close(connfd);
+        
+      //  handle_connection(connfd);
+       // close(connfd);
     }
 
     return EXIT_SUCCESS;

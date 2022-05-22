@@ -5,8 +5,8 @@ all: httpserver
 
 
 
-httpserver: httpserver.o request.o response.o
-	$(CC) -o httpserver httpserver.o request.o response.o
+httpserver: httpserver.o request.o response.o queue.o
+	$(CC) -o httpserver httpserver.o request.o response.o queue.o
 sockdem: sockdem.o
 	$(CC) -o sockdem sockdem.o
 sockdem.o: sockdem.c
@@ -20,7 +20,8 @@ requesttest: requesttest.o request.o
 
 requesttest.o: requesttest.c
 	$(CC) $(CFLAGS) -c requesttest.c
-
+queue.o: queue.c
+	$(CC) $(CFLAGS) -c queue.c
 response.o: response.c
 	$(CC) $(CFLAGS) -c response.c
 
