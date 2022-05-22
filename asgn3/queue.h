@@ -7,9 +7,9 @@ struct Queue{
   int content[128];
 
 };
-
- bool enQueue(Queue* Q, int val);\
-
+void init_queue(Queue* Q);
+bool enQueue(Queue* Q, int val);
+bool empty(Queue *Q);
 
 int size(Queue *Q);
 

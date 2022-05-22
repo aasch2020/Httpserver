@@ -14,6 +14,11 @@ int size(Queue *Q){
   return Q->size;
 
 }
+
+bool empty(Queue* Q){
+  return((Q->front == -1));
+
+}
 bool full(Queue* Q){
   return ((Q->front == 0 && Q->back == Q->total - 1) || (Q->back == (Q->front -1)%(Q->total = 1)));
 

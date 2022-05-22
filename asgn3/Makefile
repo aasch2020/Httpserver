@@ -6,7 +6,7 @@ all: httpserver
 
 
 httpserver: httpserver.o request.o response.o queue.o
-	$(CC) -o httpserver httpserver.o request.o response.o queue.o
+	$(CC) -o httpserver httpserver.o request.o response.o queue.o -pthread
 sockdem: sockdem.o
 	$(CC) -o sockdem sockdem.o
 sockdem.o: sockdem.c
