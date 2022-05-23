@@ -27,12 +27,12 @@ int threads = DEFAULT_THREAD_COUNT;
 bool stop = false;
 void sighand() {
     fflush(logfile);
-    printf("sighanded");
+//    printf("sighanded");
 
 
    fclose(logfile);
     for(int i = 0; i < threads; i++){
-      printf("iters");
+  //    printf("iters");
     fflush(stdout);
       pthread_cancel(threadq[i]);
   
@@ -85,7 +85,7 @@ static void handle_connection(int connfd) {
     // struct Request r;
 //    printf("request no init");
     request_init(&r);
-    printf("asdf");
+  //  printf("asdf");
     while (1) {
         chekr = 0;
         severerr = false;
@@ -173,7 +173,7 @@ static void handle_connection(int connfd) {
 }
 
 void sigterm_handler() {
-   printf("aaaa");
+//   printf("aaaa");
   //      warnx("received SIGTERM");
     for(int i = 0; i < threads; i++){
       pthread_cancel(threadq[i]);
@@ -202,10 +202,10 @@ pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 
 pthread_cond_t emptied = PTHREAD_COND_INITIALIZER;
 void* threadjob() {
-    printf("thread check\n");
+  //  printf("thread check\n");
     int theconnfd = -1;
     while (1) {
-       printf("stupid loop\n");
+  //     printf("stupid loop\n");
         pthread_mutex_lock(&qlock);
         while (empty(&jobqueue)) {
             pthread_cond_wait(&emptied, &qlock);
@@ -225,7 +225,7 @@ void* threadjob() {
 void produceconnfd(int connfd) {
     pthread_mutex_lock(&qlock);
     while (full(&jobqueue)) {
-printf("stupid loop\n");
+//printf("stupid loop\n");
         pthread_cond_wait(&fill, &qlock);
     }
   //  printf("swagde %d\n", connfd);

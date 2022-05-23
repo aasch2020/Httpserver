@@ -64,7 +64,7 @@ void request_clear(Request *r) {
     r->Reqid = 0;
 
     for (int i = 0; i <= r->numheads; i++) {
-        printf("freeing a header\n");
+//        printf("freeing a header\n");
         free(r->header_key[i]);
         free(r->header_vals[i]);
         r->header_key[i] = NULL;
@@ -75,10 +75,9 @@ void request_clear(Request *r) {
     free(r->header_vals);
 }
 void request_delete(Request **r) {
-    printf("bad delete\n");
+ //   printf("bad delete\n");
 
     if (*r != NULL) {
-        printf("actually fucking deleting\n");
         for (int i = 0; i <= ((*r)->numheads); i++) {
             free((*r)->header_key[i]);
             free((*r)->header_vals[i]);
@@ -414,11 +413,12 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
             totalwrote += inbufsize;
             char bufftwo[2048] = { '\0' };
             while (totalwrote < r->content_len) {
+                printf("writing right\n");
                 if (r->content_len - totalwrote >= 1024) {
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += readed;
                     //           printf("cntlen read");
-                    //                           write(writeloggerput, "First\n", 6);
+                                              // write(writeloggerput, "First\n", 6);
 
                 } else {
 
@@ -460,7 +460,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     bool opens = false;
     int opened = open(r->uri + 1, O_RDWR | O_TRUNC);
     if (opened == -1) {
-        printf("no file\n");
+//        printf("no file\n");
         if (errno == ENOENT) {
             created = false;
             opens = true;
@@ -494,7 +494,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
             if (inbufsize != 0) {
                 write(opened, buffer, inbufsize);
-                printf("in buf size is %d\n", inbufsize);
+  //              printf("in buf size is %d\n", inbufsize);
                 //          write(writeloggerput, "start\n", 6);
                 //        write(writeloggerput, buffer, inbufsize);
             }
@@ -505,18 +505,18 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
             while (totalwrote < r->content_len) {
                 if (r->content_len - totalwrote >= 1024) {
-                    printf("cntlen read");
+    //                printf("cntlen read");
                     //                            write(writeloggerput, "First\n", 6);
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += readed;
                 } else {
-                    printf("rembuff read %d\n", r->content_len - totalwrote);
+      //              printf("rembuff read %d\n", r->content_len - totalwrote);
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
                     //                 write(writeloggerput, "second\n", 7);
                 }
                 write(opened, bufftwo, readed);
-                printf("weird readed nuumber is %zd\n", readed);
+        //        printf("weird readed nuumber is %zd\n", readed);
                 //              write(writeloggerput, bufftwo, readed);
 
                 if (readed == 0) {
