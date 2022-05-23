@@ -205,6 +205,7 @@ void* threadjob() {
     printf("thread check\n");
     int theconnfd = -1;
     while (1) {
+       printf("stupid loop\n");
         pthread_mutex_lock(&qlock);
         while (empty(&jobqueue)) {
             pthread_cond_wait(&emptied, &qlock);
@@ -224,7 +225,7 @@ void* threadjob() {
 void produceconnfd(int connfd) {
     pthread_mutex_lock(&qlock);
     while (full(&jobqueue)) {
-
+printf("stupid loop\n");
         pthread_cond_wait(&fill, &qlock);
     }
   //  printf("swagde %d\n", connfd);
