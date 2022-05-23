@@ -22,14 +22,22 @@
 
 static FILE *logfile;
 #define LOG(...) fprintf(logfile, __VA_ARGS__);
-
-
+pthread_t *threadq;
+int threads = DEFAULT_THREAD_COUNT;
+bool stop = false;
 void sighand() {
     fflush(logfile);
     printf("sighanded");
-    fclose(logfile);
+
+
+   fclose(logfile);
+    for(int i = 0; i < threads; i++){
+      printf("iters");
     fflush(stdout);
-    //      request_clear(&r);
+      pthread_cancel(threadq[i]);
+  
+    }
+     //      request_clear(&r);
     exit(1);
 }
 
@@ -66,8 +74,7 @@ static int create_listen_socket(uint16_t port) {
 }
 static void handle_connection(int connfd) {
     //   logfile = fopen(logfile, "w");
-struct Request r;
-    printf("fucking fuck hungrybox %d\n", connfd);
+    struct Request r;
     int fromend = 0;
     int altrend = 0;
     int chekr = 0;
@@ -98,7 +105,7 @@ struct Request r;
             severerr = true;
             break;
         }
-       int typed = type(&r);
+        int typed = type(&r);
         switch (typed) {
         case 1: execute_get(&r, connfd, logfile); break;
         case 3:
@@ -161,76 +168,73 @@ struct Request r;
             break;
         }
     }
-       (void) connfd;
+
+    close( connfd);
 }
 
-static void sigterm_handler(int sig) {
-    if (sig == SIGTERM) {
-        warnx("received SIGTERM");
+void sigterm_handler() {
 
+        warnx("received SIGTERM");
+    for(int i = 0; i < threads; i++){
+      pthread_join(threadq[i], NULL);
+  
+    }
+ 
         fclose(logfile);
 
         fclose(logfile);
         // request_clear(&r);
 
         exit(EXIT_SUCCESS);
-    }
 }
 
 static void usage(char *exec) {
     fprintf(stderr, "usage: %s [-t threads] [-l logfile] <port>\n", exec);
 }
-void executeConn(int theconnfd){
+void executeConn(int theconnfd) {
 
-   handle_connection(theconnfd);
-
+    handle_connection(theconnfd);
 }
 Queue jobqueue;
 pthread_mutex_t buffer = PTHREAD_MUTEX_INITIALIZER;
-int bufsize = 0;
+//int bufsize = 0;
 pthread_mutex_t qlock;
 pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 
 pthread_cond_t emptied = PTHREAD_COND_INITIALIZER;
-void* threadjob(){
-  int theconnfd = -1;
-  while(1){
-    pthread_mutex_lock(&qlock);
-    while(empty(&jobqueue)){
-      pthread_cond_wait(&emptied, &qlock);
-    
-    }
-    
-      theconnfd = deQueue(&jobqueue);
-           bufsize -=1;
+void* threadjob() {
+    printf("thread check\n");
+    int theconnfd = -1;
+    while (1) {
+        pthread_mutex_lock(&qlock);
+        while (empty(&jobqueue)) {
+            pthread_cond_wait(&emptied, &qlock);
+        }
+
+        theconnfd = deQueue(&jobqueue);
+       // bufsize -= 1;
+
+        pthread_mutex_unlock(&qlock);
+        pthread_cond_signal(&fill);
+        executeConn(theconnfd);
    
-    
-    pthread_mutex_unlock(&qlock);
-    pthread_cond_signal(&fill);
-    executeConn(theconnfd);
-
-  }
- 
-
+    }
+    return NULL;
 }
 
-void produceconnfd(int connfd){
-  pthread_mutex_lock(&qlock);
-  while(full(&jobqueue)){
-  
-    pthread_cond_wait(&fill, &qlock);
-  }
-  printf("swagde %d\n", connfd);
-  enQueue(&jobqueue, connfd);
-  pthread_mutex_unlock(&qlock);
-  pthread_cond_signal(&emptied);
-  
-  
+void produceconnfd(int connfd) {
+    pthread_mutex_lock(&qlock);
+    while (full(&jobqueue)) {
 
+        pthread_cond_wait(&fill, &qlock);
+    }
+    printf("swagde %d\n", connfd);
+    enQueue(&jobqueue, connfd);
+    pthread_mutex_unlock(&qlock);
+    pthread_cond_signal(&emptied);
 }
 int main(int argc, char *argv[]) {
     int opt = 0;
-    int threads = DEFAULT_THREAD_COUNT;
     logfile = stderr;
 
     while ((opt = getopt(argc, argv, OPTIONS)) != -1) {
@@ -261,20 +265,21 @@ int main(int argc, char *argv[]) {
     if (port == 0) {
         errx(EXIT_FAILURE, "bad port number: %s", argv[1]);
     }
-    
+
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sighand);
     signal(SIGTERM, sigterm_handler);
-    pthread_t* threadq = (pthread_t*)calloc(threads, sizeof(pthread_t));
+ 
+ 
+    threadq = (pthread_t *) calloc(threads, sizeof(pthread_t));
     int listenfd = create_listen_socket(port);
-    init_queue(&jobqueue);
-    for(int i = 0; i < threads; i++){
-      pthread_create(&threadq[i], NULL, threadjob, NULL);
-      
+   init_queue(&jobqueue);
+    for (int i = 0; i < threads; i++) {
+        pthread_create(&threadq[i], NULL, threadjob, NULL);
     }
-    
+
     //    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
-    
+
     for (;;) {
         int connfd = accept(listenfd, NULL, NULL);
         if (connfd < 0) {
@@ -282,9 +287,9 @@ int main(int argc, char *argv[]) {
             continue;
         }
         produceconnfd(connfd);
-         
-      //  handle_connection(connfd);
-       // close(connfd);
+
+        //  handle_connection(connfd);
+        // close(connfd);
     }
 
     return EXIT_SUCCESS;
