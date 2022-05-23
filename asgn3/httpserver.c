@@ -173,16 +173,15 @@ static void handle_connection(int connfd) {
 }
 
 void sigterm_handler() {
-
-        warnx("received SIGTERM");
+   printf("aaaa");
+  //      warnx("received SIGTERM");
     for(int i = 0; i < threads; i++){
-      pthread_join(threadq[i], NULL);
+      pthread_cancel(threadq[i]);
   
     }
- 
-        fclose(logfile);
-
-        fclose(logfile);
+ fflush(stdout);
+fflush(logfile);
+           fclose(logfile);
         // request_clear(&r);
 
         exit(EXIT_SUCCESS);
