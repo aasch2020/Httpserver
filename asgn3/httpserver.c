@@ -83,7 +83,7 @@ static void handle_connection(int connfd) {
     bool severerr = false;
     bool badreq = false;
     // struct Request r;
-    printf("request no init");
+//    printf("request no init");
     request_init(&r);
     printf("asdf");
     while (1) {
@@ -92,7 +92,7 @@ static void handle_connection(int connfd) {
         badreq = false;
         altrend = 0;
         fromend = 0;
-        printf("balls");
+    //    printf("balls");
         //    badreq = true;
         //           memset(onebuff, '\0', 2048);
         //          memset(twobuff, '\0', 2048);
@@ -227,7 +227,7 @@ void produceconnfd(int connfd) {
 
         pthread_cond_wait(&fill, &qlock);
     }
-    printf("swagde %d\n", connfd);
+  //  printf("swagde %d\n", connfd);
     enQueue(&jobqueue, connfd);
     pthread_mutex_unlock(&qlock);
     pthread_cond_signal(&emptied);
