@@ -27,17 +27,12 @@ int threads = DEFAULT_THREAD_COUNT;
 bool stop = false;
 void sighand() {
     fflush(logfile);
-//    printf("sighanded");
 
-
-   fclose(logfile);
-    for(int i = 0; i < threads; i++){
-  //    printf("iters");
-    fflush(stdout);
-      pthread_cancel(threadq[i]);
-  
+    fclose(logfile);
+    for (int i = 0; i < threads; i++) {
+        fflush(stdout);
+        pthread_cancel(threadq[i]);
     }
-     //      request_clear(&r);
     exit(1);
 }
 
@@ -73,7 +68,6 @@ static int create_listen_socket(uint16_t port) {
     return listenfd;
 }
 static void handle_connection(int connfd) {
-    //   logfile = fopen(logfile, "w");
     struct Request r;
     int fromend = 0;
     int altrend = 0;
@@ -82,21 +76,14 @@ static void handle_connection(int connfd) {
     char twobuff[2048] = { '\0' };
     bool severerr = false;
     bool badreq = false;
-    // struct Request r;
-//    printf("request no init");
     request_init(&r);
-  //  printf("asdf");
     while (1) {
+
         chekr = 0;
         severerr = false;
         badreq = false;
         altrend = 0;
         fromend = 0;
-    //    printf("balls");
-        //    badreq = true;
-        //           memset(onebuff, '\0', 2048);
-        //          memset(twobuff, '\0', 2048);
-
         if (hcreadstart(&r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
             severerr = true;
             break;
@@ -168,23 +155,17 @@ static void handle_connection(int connfd) {
             break;
         }
     }
-
-    close( connfd);
 }
 
 void sigterm_handler() {
-//   printf("aaaa");
-  //      warnx("received SIGTERM");
-    for(int i = 0; i < threads; i++){
-      pthread_cancel(threadq[i]);
-  
-    }
- fflush(stdout);
-fflush(logfile);
-           fclose(logfile);
-        // request_clear(&r);
+    for (int i = 0; i < threads; i++) {
 
-        exit(EXIT_SUCCESS);
+        pthread_cancel(threadq[i]);
+    }
+    fflush(stdout);
+    fflush(logfile);
+    fclose(logfile);
+    exit(EXIT_SUCCESS);
 }
 
 static void usage(char *exec) {
@@ -196,28 +177,22 @@ void executeConn(int theconnfd) {
 }
 Queue jobqueue;
 pthread_mutex_t buffer = PTHREAD_MUTEX_INITIALIZER;
-//int bufsize = 0;
 pthread_mutex_t qlock;
 pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 
 pthread_cond_t emptied = PTHREAD_COND_INITIALIZER;
-void* threadjob() {
-  //  printf("thread check\n");
+void *threadjob() {
     int theconnfd = -1;
     while (1) {
-  //     printf("stupid loop\n");
         pthread_mutex_lock(&qlock);
         while (empty(&jobqueue)) {
             pthread_cond_wait(&emptied, &qlock);
         }
 
         theconnfd = deQueue(&jobqueue);
-       // bufsize -= 1;
-
         pthread_mutex_unlock(&qlock);
         pthread_cond_signal(&fill);
         executeConn(theconnfd);
-   
     }
     return NULL;
 }
@@ -225,10 +200,9 @@ void* threadjob() {
 void produceconnfd(int connfd) {
     pthread_mutex_lock(&qlock);
     while (full(&jobqueue)) {
-//printf("stupid loop\n");
         pthread_cond_wait(&fill, &qlock);
     }
-  //  printf("swagde %d\n", connfd);
+
     enQueue(&jobqueue, connfd);
     pthread_mutex_unlock(&qlock);
     pthread_cond_signal(&emptied);
@@ -269,27 +243,24 @@ int main(int argc, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sighand);
     signal(SIGTERM, sigterm_handler);
- 
- 
+
     threadq = (pthread_t *) calloc(threads, sizeof(pthread_t));
     int listenfd = create_listen_socket(port);
-   init_queue(&jobqueue);
+    init_queue(&jobqueue);
     for (int i = 0; i < threads; i++) {
         pthread_create(&threadq[i], NULL, threadjob, NULL);
     }
 
-    //    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
+    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
 
     for (;;) {
+//        printf("looping to hard on connfd\n");
         int connfd = accept(listenfd, NULL, NULL);
         if (connfd < 0) {
             warn("accept error");
             continue;
         }
         produceconnfd(connfd);
-
-        //  handle_connection(connfd);
-        // close(connfd);
     }
 
     return EXIT_SUCCESS;
