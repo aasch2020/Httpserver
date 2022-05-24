@@ -254,7 +254,7 @@ int main(int argc, char *argv[]) {
     LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
 
     for (;;) {
-//        printf("looping to hard on connfd\n");
+        //        printf("looping to hard on connfd\n");
         int connfd = accept(listenfd, NULL, NULL);
         if (connfd < 0) {
             warn("accept error");
