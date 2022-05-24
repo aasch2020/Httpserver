@@ -105,7 +105,7 @@ int hcreadstart(
     int lenmatch = 0;
     int timesgone = 0;
     while (readed < toread) {
-        printf("oop on initial\n");
+    //    printf("oop on initial\n");
         if (!(inbufsize > 0 && timesgone == 0)) {
             readcur = read(connfd, readbuff + readed, toread - readed);
             if (readcur == 0) {
@@ -164,7 +164,7 @@ int addheadersfrombuff(Request *r, int inbufsize, int *parsed, char *inbuffer) {
     int lenmatch = 0;
     int trackwhere = 0;
     while ((regexec(&regm, inbuffer + trackwhere, 1, &regs, 0) == 0) && (trackwhere != inbufsize)) {
-        printf("headfrmbuff inf loop bad\n");
+     //   printf("headfrmbuff inf loop bad\n");
         lenmatch = regs.rm_eo - regs.rm_so;
         statmatch = strndup(inbuffer + regs.rm_so + trackwhere, lenmatch);
         add_header(r, statmatch);
@@ -210,7 +210,7 @@ int headreadstart(
     bool found = false;
     int timesgone = 0;
     while (readed < toread || !found) {
-        printf("headreadstart inf loop\n");
+       // printf("headreadstart inf loop\n");
         if (!(inbufsize > 0 && timesgone == 0)) {
             readcur = read(connfd, readbuff + readed, toread - readed);
             if (readcur == 0) {
