@@ -154,7 +154,7 @@ static void handle_connection(int connfd) {
 
             break;
         }
-        printf("done done with a request\n");
+        // printf("done done with a request\n");
     }
     close(connfd);
 }
