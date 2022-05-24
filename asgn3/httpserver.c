@@ -157,7 +157,6 @@ static void handle_connection(int connfd) {
         printf("done done with a request\n");
     }
     close(connfd);
-
 }
 void sigterm_handler() {
     for (int i = 0; i < threads; i++) {

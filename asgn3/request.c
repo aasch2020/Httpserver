@@ -543,7 +543,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         response_delete(&resp);
 
     } else {
-        
+
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
         writelog(r, resp, logfile);
