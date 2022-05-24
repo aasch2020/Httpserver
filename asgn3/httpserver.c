@@ -190,8 +190,9 @@ void *threadjob() {
         }
 
         theconnfd = deQueue(&jobqueue);
-        pthread_mutex_unlock(&qlock);
         pthread_cond_signal(&fill);
+
+        pthread_mutex_unlock(&qlock);
         executeConn(theconnfd);
     }
     return NULL;
@@ -204,8 +205,9 @@ void produceconnfd(int connfd) {
     }
 
     enQueue(&jobqueue, connfd);
-    pthread_mutex_unlock(&qlock);
     pthread_cond_signal(&emptied);
+
+    pthread_mutex_unlock(&qlock);
 }
 int main(int argc, char *argv[]) {
     int opt = 0;

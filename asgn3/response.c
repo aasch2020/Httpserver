@@ -88,6 +88,7 @@ void response_delete(Response **r) {
 }
 
 void writeresp(Response *r, int connec) {
+    printf("dpomg a res[pmse\n");
     int len = strlen(r->httpver) + strlen(r->statphrase) + 5;
     char *writebuf = (char *) calloc(len + 1, sizeof(char));
     sprintf(writebuf, "%s %d %s", r->httpver, r->type, r->statphrase);
@@ -111,6 +112,8 @@ int resptype(Response *r) {
     return r->type;
 }
 void write_file(Response *r, int filewrt, int connec) {
+
+    printf("writing a response\n");
     struct stat filestat;
     fstat(filewrt, &filestat);
     char writebuf[2048];
