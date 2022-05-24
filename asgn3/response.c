@@ -105,6 +105,7 @@ void writeresp(Response *r, int connec) {
 
     write(connec, "\r\n\r\n", 4);
     write(connec, r->msgbody, strlen(r->msgbody));
+    printf("done doing a repsonse\n");
     free(writebuf);
 }
 int resptype(Response *r) {

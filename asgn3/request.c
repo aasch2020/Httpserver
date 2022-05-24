@@ -506,6 +506,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
             char bufftwo[2048] = { '\0' };
 
             while (totalwrote < r->content_len) {
+                printf("big writing");
                 if (r->content_len - totalwrote >= 1024) {
                     //                printf("cntlen read");
                     //                            write(writeloggerput, "First\n", 6);
@@ -542,7 +543,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         response_delete(&resp);
 
     } else {
-
+        
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
         writelog(r, resp, logfile);
