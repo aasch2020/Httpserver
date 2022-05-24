@@ -443,10 +443,10 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
         }
         resptype = 200;
     }
+    close(opened);
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
     writelog(r, resp, logfile);
-    close(opened);
 
     response_delete(&resp);
     if (resptype != 200) {
