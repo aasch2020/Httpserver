@@ -175,6 +175,7 @@ static void usage(char *exec) {
 void executeConn(int theconnfd) {
 
     handle_connection(theconnfd);
+    return;
 }
 Queue jobqueue;
 pthread_mutex_t buffer = PTHREAD_MUTEX_INITIALIZER;
