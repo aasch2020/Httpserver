@@ -18,6 +18,16 @@ There are two (functional) args which is the port number for the httpserver, and
 ./split 'delim' files files...
 ...
 
+
+## Output
+
+On a PUT request the server will respond with either a 200 OK, or a 201 CREATED on success, which indicated that the data has been written
+
+On a GET request, the server will respond with a 200 OK, with the content of the file.
+
+On an APPEND request, the server will respond with a 200 OK, with no content other than OK
+
+These above outputs assume successful requests
 ## Design Decisions
 
 The notable design decisions for this document include creating structs for request and response so that the http requests and responses can be more easily read from and written to. Additionally, the audit logging functionality is bundled in with request execution files. The program uses a thread pool design with a bounded buffer and a producer consumer solution to manage threads
@@ -60,5 +70,6 @@ At this point, non blocking input and output are not implemented. If a client is
 
 ## Error Messages.
 
-The program will return http error responses on error, for example 404 not found if a given file does not exist. It will also only log successful or internal server errors.
+404 Not Found, when a file for a GET or PUT request is not found
 
+500 Internal Server Error, something went wrong in processing. NOTE: the client may not see this message but it will be logged. 
