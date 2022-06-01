@@ -77,88 +77,86 @@ static void handle_connection(int connfd) {
     bool severerr = false;
     bool badreq = false;
     request_init(&r);
-    //  printf("handleconnec\n");
-    chekr = 0;
-    severerr = false;
-    badreq = false;
-    altrend = 0;
-    fromend = 0;
-    if (hcreadstart(&r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
-        severerr = true;
-        //             break;
-    }
-    if (-1 == headreadstart(&r, connfd, altrend, &fromend, twobuff, onebuff)) {
-        severerr = true;
-        //               break;
-    }
-    int typed = type(&r);
-    printf("the type is %d\n", typed);
-    switch (typed) {
-    case 1: execute_get(&r, connfd, logfile); break;
-    case 3:
-        if ((chekr = execute_append(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile))
-            == 1) {
+    while (1) {
+
+        chekr = 0;
+        severerr = false;
+        badreq = false;
+        altrend = 0;
+        fromend = 0;
+        if (hcreadstart(&r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
+            severerr = true;
+            break;
+        }
+        if (-1 == headreadstart(&r, connfd, altrend, &fromend, twobuff, onebuff)) {
+            severerr = true;
+            break;
+        }
+        int typed = type(&r);
+        switch (typed) {
+        case 1: execute_get(&r, connfd, logfile); break;
+        case 3:
+            if ((chekr = execute_append(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile))
+                == 1) {
+                fromend = 0;
+                altrend = 0;
+                badreq = true;
+                memset(onebuff, '\0', 2048);
+                memset(twobuff, '\0', 2048);
+            }
+
+            break;
+        case 2:
+            if ((chekr = execute_put(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile))
+                == 1) {
+                fromend = 0;
+                altrend = 0;
+                badreq = true;
+                memset(onebuff, '\0', 2048);
+                memset(twobuff, '\0', 2048);
+            }
+            break;
+        case 4:
+            fromend = 0;
+            Response *resp = response_create(400);
+            writeresp(resp, connfd);
+            response_delete(&resp);
+            altrend = 0;
+            badreq = true;
+            memset(onebuff, '\0', 2048);
+            memset(twobuff, '\0', 2048);
+
+            fflush(stdout);
+            break;
+        case 0:
+            fromend = 0;
+            Response *respun = response_create(501);
+            writeresp(respun, connfd);
+            response_delete(&respun);
+
+            altrend = 0;
+            badreq = true;
+            memset(onebuff, '\0', 2048);
+            memset(twobuff, '\0', 2048);
+
+            break;
+        }
+        request_clear(&r);
+        if (chekr == -1) {
+            Response *respun = response_create(500);
+            writeresp(respun, connfd);
+            response_delete(&respun);
             fromend = 0;
             altrend = 0;
             badreq = true;
             memset(onebuff, '\0', 2048);
             memset(twobuff, '\0', 2048);
+
+            break;
         }
-
-        break;
-    case 2:
-        if ((chekr = execute_put(&r, connfd, onebuff, &altrend, twobuff, fromend, logfile)) == 1) {
-            fromend = 0;
-            altrend = 0;
-            badreq = true;
-            memset(onebuff, '\0', 2048);
-            memset(twobuff, '\0', 2048);
-        }
-        break;
-    case 4:
-        fromend = 0;
-        Response *resp = response_create(400);
-        writeresp(resp, connfd);
-        response_delete(&resp);
-        altrend = 0;
-
-        badreq = true;
-        memset(onebuff, '\0', 2048);
-        memset(twobuff, '\0', 2048);
-
-        fflush(stdout);
-        ;
-    case 0:
-        fromend = 0;
-        Response *respun = response_create(501);
-        writeresp(respun, connfd);
-        response_delete(&respun);
-
-        altrend = 0;
-        badreq = true;
-        memset(onebuff, '\0', 2048);
-        memset(twobuff, '\0', 2048);
-
-        //    break;
+        // printf("done done with a request\n");
     }
-    request_clear(&r);
-    if (chekr == -1) {
-        //    printf("error here\n");
-        Response *respun = response_create(500);
-        writeresp(respun, connfd);
-        response_delete(&respun);
-        fromend = 0;
-        altrend = 0;
-        badreq = true;
-        memset(onebuff, '\0', 2048);
-        memset(twobuff, '\0', 2048);
-
-        //            break;
-    }
-    // printf("done done with a request\n");
-
     close(connfd);
-    return;
 }
 void sigterm_handler() {
     for (int i = 0; i < threads; i++) {
@@ -175,13 +173,13 @@ static void usage(char *exec) {
     fprintf(stderr, "usage: %s [-t threads] [-l logfile] <port>\n", exec);
 }
 void executeConn(int theconnfd) {
-    //  printf("executin the connection %d\n", theconnfd);
+
     handle_connection(theconnfd);
     return;
 }
 Queue jobqueue;
 pthread_mutex_t buffer = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t qlock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t qlock;
 pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 
 pthread_cond_t emptied = PTHREAD_COND_INITIALIZER;
@@ -203,12 +201,11 @@ void *threadjob() {
 }
 
 void produceconnfd(int connfd) {
-    //    printf("getting a conn\n");
     pthread_mutex_lock(&qlock);
     while (full(&jobqueue)) {
         pthread_cond_wait(&fill, &qlock);
     }
-    //  printf("giving connfd %d\n", connfd);
+
     enQueue(&jobqueue, connfd);
     pthread_cond_signal(&emptied);
 

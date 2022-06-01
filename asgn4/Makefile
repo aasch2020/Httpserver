@@ -24,6 +24,7 @@ queue.o: queue.c
 	$(CC) $(CFLAGS) -c queue.c
 response.o: response.c
 	$(CC) $(CFLAGS) -c response.c
+
 request.o: request.c
 	$(CC) $(CFLAGS) -c request.c
 
