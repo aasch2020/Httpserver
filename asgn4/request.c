@@ -603,13 +603,13 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     
 //    printf("done with buff %d\n", r->Reqid);
 //    bool newfile;
+    pthread_mutex_lock(&filechecklock);
 
     int opened = open(r->uri + 1, __O_PATH);
     int createdfd = 0;
     created = false;
     if(opened == -1){
        created = true;
-       pthread_mutex_lock(&filechecklock);
        createdfd = open(r->uri + 1, O_CREAT| O_RDWR, 0666);
        flock(createdfd, LOCK_EX);
        pthread_mutex_unlock(&filechecklock);
@@ -617,10 +617,10 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
         
 
-    }
+    }else{
     //    printf("before lock problem\n");
-    if(!created){
-    flock(opened, LOCK_EX);
+       flock(opened, LOCK_EX);
+  pthread_mutex_unlock(&filechecklock);
 
     //   printf("this can't happen before the get\n");
     //  printf("in the critical sectione\n");
@@ -630,7 +630,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     if (rename(templ, r->uri + 1) != 0) {
         printf("rename more like relame\n");
     }
-    //  remove(templ);
+      remove(templ);
     //  close(tempfd);
 
     //  resptype = 200;
