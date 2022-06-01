@@ -337,29 +337,19 @@ const char *get_uri(Request *r) {
 const char *get_type(Request *r) {
     return r->type;
 }
+
+
+pthread_mutex_t filechecklock = PTHREAD_MUTEX_INITIALIZER;
+
 pthread_mutex_t loglock = PTHREAD_MUTEX_INITIALIZER;
 int execute_get(Request *r, int connfd, FILE *logfile) {
     // int types = type(r);
     //  printf("EXECUTING GET\n");
   //  printf("uri is %s\n", r->uri + 1);
+    pthread_mutex_lock(&filechecklock);
     int opened = open(r->uri + 1, __O_PATH);
    // printf("file descriptor is %d\n", opened);
-    flock(opened, LOCK_SH);
-    opened = open(r->uri + 1, O_RDWR);
-    if (errno == EISDIR) {
-        Response *errrep = response_create(403);
-        pthread_mutex_lock(&loglock);
-
-        writelog(r, errrep, logfile);
-        writeresp(errrep, connfd);
-        pthread_mutex_unlock(&loglock);
-        flock(opened, LOCK_UN);
-        response_delete(&errrep);
-        return 1;
-    }
-    //     int error = errno;
-    opened = open(r->uri + 1, O_RDONLY);
-    if (opened == -1) {
+   if (opened == -1) {
         if ((errno == EACCES) || (errno == EISDIR)) {
             Response *errrep = response_create(403);
 
@@ -368,7 +358,8 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
             writelog(r, errrep, logfile);
             pthread_mutex_unlock(&loglock);
-            flock(opened, LOCK_UN);
+    pthread_mutex_unlock(&filechecklock);
+
             response_delete(&errrep);
             return 1;
         } else if (errno == ENOENT) {
@@ -379,7 +370,9 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
             writelog(r, errrep, logfile);
             pthread_mutex_unlock(&loglock);
-            flock(opened, LOCK_UN);
+    pthread_mutex_unlock(&filechecklock);
+
+
             response_delete(&errrep);
 
             return 1;
@@ -390,10 +383,17 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
             writelog(r, errrep, logfile);
             pthread_mutex_unlock(&loglock);
-            flock(opened, LOCK_UN);
-            response_delete(&errrep);
+            pthread_mutex_unlock(&filechecklock);
+
+
+           response_delete(&errrep);
             return 1;
         }
+    }else{
+      opened = open(r->uri + 1, O_RDONLY);
+      flock(opened, LOCK_SH);
+      pthread_mutex_unlock(&filechecklock);
+
     }
     int resptype = 200;
     Response *resp = response_create(resptype);
@@ -401,12 +401,12 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
     //    printf("we got the lock\n");
     write_file(resp, opened, connfd);
 
-    flock(opened, LOCK_UN);
+  
     pthread_mutex_lock(&loglock);
     writelog(r, resp, logfile);
 
     pthread_mutex_unlock(&loglock);
-
+      flock(opened, LOCK_UN);
     response_delete(&resp);
 
     return 0;
@@ -467,13 +467,12 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
         }
     }
     resptype = 200;
+   pthread_mutex_lock(&filechecklock); 
     int opened = open(r->uri + 1, __O_PATH);
-    flock(opened, LOCK_EX);
-    int connopen = open(r->uri + 1, O_WRONLY | O_APPEND);
-    if (opened == -1) {
+       if (opened == -1) {
         int errord = errno;
         if (errord == ENOENT) {
-            flock(opened, LOCK_UN);
+    //        flock(opened, LOCK_UN);
             resptype = 404;
             Response *resp = response_create(resptype);
             writeresp(resp, connfd);
@@ -482,12 +481,15 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
             writelog(r, resp, logfile);
 
             pthread_mutex_unlock(&loglock);
-
+              pthread_mutex_unlock(&filechecklock); 
             response_delete(&resp);
             return 1;
         }
     }
-    int transfer = 0;
+  
+    flock(opened, LOCK_EX);
+    int connopen = open(r->uri + 1, O_WRONLY | O_APPEND);
+   int transfer = 0;
     int numwrite = r->content_len;
     char buffs[2048];
     int readed = 0;
@@ -599,26 +601,31 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         resptype = 200;
     }
     
-    printf("done with buff %d\n", r->Reqid);
+//    printf("done with buff %d\n", r->Reqid);
 //    bool newfile;
 
     int opened = open(r->uri + 1, __O_PATH);
-  // if(opened == -1){
-      
+    int createdfd = 0;
+    created = false;
+    if(opened == -1){
+       created = true;
+       pthread_mutex_lock(&filechecklock);
+       createdfd = open(r->uri + 1, O_CREAT| O_RDWR, 0666);
+       flock(createdfd, LOCK_EX);
+       pthread_mutex_unlock(&filechecklock);
+       
 
-   // }
+        
+
+    }
     //    printf("before lock problem\n");
+    if(!created){
     flock(opened, LOCK_EX);
+
     //   printf("this can't happen before the get\n");
     //  printf("in the critical sectione\n");
-    int checkop = open(r->uri + 1, O_RDWR | O_TRUNC);
-  printf("criti section%d\n", r->Reqid);
-
-    flock(checkop, LOCK_EX);
-    if ((checkop == -1) && (errno = ENOENT)) {
-        resptype = 201;
-    } else {
-        resptype = 200;
+    //   open(r->uri + 1, O_RDWR | O_TRUNC);
+     //  printf("criti section%d\n", r->Reqid);
     }
     if (rename(templ, r->uri + 1) != 0) {
         printf("rename more like relame\n");
@@ -639,7 +646,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         pthread_mutex_unlock(&loglock);
 
         response_delete(&resp);
-
+        flock(createdfd, LOCK_UN);
     } else {
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
@@ -652,8 +659,9 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         response_delete(&resp);
     }
    printf("done with%d\n", r->Reqid);
+   
   flock(opened, LOCK_UN);
-  flock(checkop, LOCK_UN);
+//  flock(checkop, LOCK_UN);
     if (resptype != 200) {
         return 1;
     }
