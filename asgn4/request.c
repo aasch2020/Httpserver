@@ -343,6 +343,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
     //  printf("EXECUTING GET\n");
   //  printf("uri is %s\n", r->uri + 1);
     int opened = open(r->uri + 1, __O_PATH);
+   // printf("file descriptor is %d\n", opened);
     flock(opened, LOCK_SH);
     opened = open(r->uri + 1, O_RDWR);
     if (errno == EISDIR) {
@@ -597,14 +598,23 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         }
         resptype = 200;
     }
+    
+    printf("done with buff %d\n", r->Reqid);
+//    bool newfile;
 
     int opened = open(r->uri + 1, __O_PATH);
+  // if(opened == -1){
+      
 
+   // }
     //    printf("before lock problem\n");
     flock(opened, LOCK_EX);
     //   printf("this can't happen before the get\n");
     //  printf("in the critical sectione\n");
-    int checkop = open(r->uri + 1, O_RDWR);
+    int checkop = open(r->uri + 1, O_RDWR | O_TRUNC);
+  printf("criti section%d\n", r->Reqid);
+
+    flock(checkop, LOCK_EX);
     if ((checkop == -1) && (errno = ENOENT)) {
         resptype = 201;
     } else {
@@ -613,8 +623,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     if (rename(templ, r->uri + 1) != 0) {
         printf("rename more like relame\n");
     }
-    flock(opened, LOCK_UN);
-    remove(templ);
+    //  remove(templ);
     //  close(tempfd);
 
     //  resptype = 200;
@@ -642,6 +651,9 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
         response_delete(&resp);
     }
+   printf("done with%d\n", r->Reqid);
+  flock(opened, LOCK_UN);
+  flock(checkop, LOCK_UN);
     if (resptype != 200) {
         return 1;
     }

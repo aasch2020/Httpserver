@@ -92,7 +92,7 @@ static void handle_connection(int connfd) {
         //               break;
     }
     int typed = type(&r);
-    printf("the type is %d\n", typed);
+  //  printf("the type is %d\n", typed);
     switch (typed) {
     case 1: execute_get(&r, connfd, logfile); break;
     case 3:
