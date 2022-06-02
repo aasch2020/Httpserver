@@ -410,7 +410,7 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     }
     resptype = 200;
     pthread_mutex_lock(&filechecklock);
-    int opened = open(r->uri + 1, __O_PATH);
+    int opened = open(r->uri + 1, O_RDWR);
     if (opened == -1) {
         int errord = errno;
         if (errord == ENOENT) {
@@ -454,93 +454,97 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     int inbufsize, FILE *logfile) {
     bool created = false;
     int resptype = 0;
-   char templ[8] = "tXXXXXX";
+    char templ[8] = "tXXXXXX";
     int tempfd = mkstemp(templ);
     if (tempfd == -1) {
         printf("error making temp file\n");
     }
-       int writed = 0;
-        if (inbufsize >= r->content_len) {
-            writed = write(tempfd, buffer, r->content_len);
-            memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
-            *fromend = inbufsize - r->content_len;
-        } else {
-            int totalwrote = 0;
-            if (inbufsize != 0) {
-                write(tempfd, buffer, inbufsize);
-            }
-
-            ssize_t readed = 0;
-            totalwrote += inbufsize;
-            char bufftwo[2048] = { '\0' };
-
-            while (totalwrote < r->content_len) {
-                if (r->content_len - totalwrote >= 1024) {
-                    readed = read(connfd, bufftwo, 1024);
-                    totalwrote += readed;
-                } else {
-                    readed = read(connfd, bufftwo, r->content_len - totalwrote);
-                    totalwrote += readed;
-                }
-                write(tempfd, bufftwo, readed);
-                if (readed == 0) {
-                    printf("the connection died\n");
-                    return -1;
-                }
-                           }
+    int writed = 0;
+    if (inbufsize >= r->content_len) {
+        writed = write(tempfd, buffer, r->content_len);
+        memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
+        *fromend = inbufsize - r->content_len;
+    } else {
+        int totalwrote = 0;
+        if (inbufsize != 0) {
+            write(tempfd, buffer, inbufsize);
         }
-        resptype = 200;
-    
+
+        ssize_t readed = 0;
+        totalwrote += inbufsize;
+        char bufftwo[2048] = { '\0' };
+
+        while (totalwrote < r->content_len) {
+            if (r->content_len - totalwrote >= 1024) {
+                readed = read(connfd, bufftwo, 1024);
+                totalwrote += readed;
+            } else {
+                readed = read(connfd, bufftwo, r->content_len - totalwrote);
+                totalwrote += readed;
+            }
+            write(tempfd, bufftwo, readed);
+            if (readed == 0) {
+                printf("the connection died\n");
+                return -1;
+            }
+        }
+    }
+    resptype = 200;
+
     pthread_mutex_lock(&filechecklock);
-//printf("%d got the filechecklock\n", r->Reqid);
-    int opened = open(r->uri + 1, __O_PATH);
+ //   printf("%d got the filechecklock\n", r->Reqid);
+    int opened = open(r->uri + 1, O_RDWR);
     flock(opened, LOCK_EX);
-    int realfd = 0;
+    // int createfd = 0;
+    //   int realfd = 0;
     created = false;
     //   int newfd = 0;
     if (opened == -1) {
-        printf("createdfile with reqid %d\n", r->Reqid);
+   //     printf("createdfile with reqid %d\n", r->Reqid);
         created = true;
-        realfd = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
-       flock(realfd, LOCK_EX);
-       printf("file number  locking create%d\n", r->Reqid);
+        flock(opened, LOCK_UN);
+
+        opened = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
+        flock(opened, LOCK_EX);
+     //   printf("file number  locking create%d\n", r->Reqid);
         pthread_mutex_unlock(&filechecklock);
 
     } else {
-        realfd = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
-        printf("file number got lock %d\n", r->Reqid);
-
+        flock(opened, LOCK_UN);
+        opened = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
+    //    printf("file number got lock %d\n", r->Reqid);
+        flock(opened, LOCK_EX);
         pthread_mutex_unlock(&filechecklock);
     }
     int transfer = 0;
     int numwrite = r->content_len;
     char buffs[2048];
     int readed = 0;
- 
+
     while (transfer < numwrite) {
         readed = read(tempfd, buffs, 2048);
-        write(realfd, buffs, readed);
+        write(opened, buffs, readed);
         transfer += numwrite;
     }
- 
+
     remove(templ);
     if (created) {
         Response *resp = response_create(201);
         writeresp(resp, connfd);
-        printf("file number loggine create %d\n", r->Reqid);
+      //  printf("file number loggine create %d\n", r->Reqid);
         writelog(r, resp, logfile);
-        flock(realfd, LOCK_UN); 
-        close(realfd);
+        flock(opened, LOCK_UN);
+        // close(opened);
 
         response_delete(&resp);
     } else {
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
-        printf("file number logging normal %d\n", r->Reqid);
+     //   printf("file number logging normal %d\n", r->Reqid);
         writelog(r, resp, logfile);
         flock(opened, LOCK_UN);
-        close(opened);
+        // close(opened);
         response_delete(&resp);
     }
-      return 0;
+    return 0;
 }
