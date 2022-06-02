@@ -27,17 +27,9 @@ int threads = DEFAULT_THREAD_COUNT;
 bool stop = false;
 void sighand() {
     fflush(logfile);
-    //printf("handling signal\n");
     fclose(logfile);
     for (int i = 0; i < threads; i++) {
-        //        fflush(stdout);
         pthread_cancel(threadq[i]);
-        //       printf("not cancelling\n");
-        //  }
-        //   }
-        //  for (int i = 0; i < threads; i++) {
-
-        //               pthread_join(threadq[i], NULL);
         if (errno == EINVAL) {
             printf("invalid\n");
         }
@@ -87,7 +79,6 @@ static void handle_connection(int connfd) {
     bool severerr = false;
     bool badreq = false;
     request_init(&r);
-    //  printf("handleconnec\n");
     chekr = 0;
     severerr = false;
     badreq = false;
@@ -95,14 +86,11 @@ static void handle_connection(int connfd) {
     fromend = 0;
     if (hcreadstart(&r, connfd, fromend, &altrend, onebuff, twobuff) == -1) {
         severerr = true;
-        //             break;
     }
     if (-1 == headreadstart(&r, connfd, altrend, &fromend, twobuff, onebuff)) {
         severerr = true;
-        //               break;
     }
     int typed = type(&r);
-    //  printf("the type is %d\n", typed);
     switch (typed) {
     case 1: execute_get(&r, connfd, logfile); break;
     case 3:
@@ -148,12 +136,9 @@ static void handle_connection(int connfd) {
         badreq = true;
         memset(onebuff, '\0', 2048);
         memset(twobuff, '\0', 2048);
-
-        //    break;
     }
     request_clear(&r);
     if (chekr == -1) {
-        //    printf("error here\n");
         Response *respun = response_create(500);
         writeresp(respun, connfd);
         response_delete(&respun);
@@ -162,11 +147,7 @@ static void handle_connection(int connfd) {
         badreq = true;
         memset(onebuff, '\0', 2048);
         memset(twobuff, '\0', 2048);
-
-        //            break;
     }
-    // printf("done done with a request\n");
-
     close(connfd);
     return;
 }
@@ -175,13 +156,7 @@ void sigterm_handler() {
 
         pthread_cancel(threadq[i]);
     }
-    //  fflush(stdout);
     fflush(logfile);
-    //   fclose(logfile);
-    // for (int i = 0; i < threads; i++) {
-
-    //       pthread_join(threadq[i], NULL);
-
     exit(EXIT_SUCCESS);
 }
 
@@ -189,7 +164,6 @@ static void usage(char *exec) {
     fprintf(stderr, "usage: %s [-t threads] [-l logfile] <port>\n", exec);
 }
 void executeConn(int theconnfd) {
-    //  printf("executin the connection %d\n", theconnfd);
     handle_connection(theconnfd);
     return;
 }
@@ -200,15 +174,10 @@ pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 
 pthread_cond_t emptied = PTHREAD_COND_INITIALIZER;
 void *threadjob() {
-    //    int a = 0;
-    //  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &a);
     int theconnfd = -1;
-    //  printf("starts here\n");
     while (1) {
-        //    printf("stucked here\n");
         pthread_mutex_lock(&qlock);
         while (empty(&jobqueue)) {
-            //        printf("thread ends here bfore the end\n");
             pthread_cond_wait(&emptied, &qlock);
         }
 
@@ -222,13 +191,10 @@ void *threadjob() {
 }
 
 void produceconnfd(int connfd) {
-    //    printf("getting a conn\n");
     pthread_mutex_lock(&qlock);
-    //    printf("doing a queue\n");
     while (full(&jobqueue)) {
         pthread_cond_wait(&fill, &qlock);
     }
-    //  printf("giving connfd %d\n", connfd);
     enQueue(&jobqueue, connfd);
     pthread_cond_signal(&emptied);
 
@@ -277,9 +243,6 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < threads; i++) {
         pthread_create(&threadq[i], NULL, threadjob, NULL);
     }
-
-    //    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
-
     for (;;) {
         int connfd = accept(listenfd, NULL, NULL);
         if (connfd < 0) {
