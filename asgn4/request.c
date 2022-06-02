@@ -12,13 +12,13 @@
 #include "response.h"
 #include <unistd.h>
 #include <fcntl.h>
-pthread_mutex_t loglock = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t loglock = PTHREAD_MUTEX_INITIALIZER;
 
 void writelog(Request *r, Response *a, FILE *logfile) {
-    pthread_mutex_lock(&loglock);
+    //  pthread_mutex_lock(&loglock);
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
     fflush(logfile);
-    pthread_mutex_unlock(&loglock);
+    //  pthread_mutex_unlock(&loglock);
 }
 Request *request_create() {
     Request *r = (Request *) calloc(1, sizeof(Request));
