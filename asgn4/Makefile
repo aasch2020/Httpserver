@@ -13,7 +13,7 @@ sockdem.o: sockdem.c
 	$(CC) $(CFLAGS) -c sockdem.c
 
 httpserver.o: httpserver.c
-	$(CC) $(CFLAGS) -c httpserver.c
+	$(CC) $(CFLAGS) -c httpserver.c -pthread
 requesttest: requesttest.o request.o
 	$(CC) -o requesttest requesttest.o request.o
 
@@ -25,7 +25,7 @@ response.o: response.c
 	$(CC) $(CFLAGS) -c response.c
 
 request.o: request.c
-	$(CC) $(CFLAGS) -c request.c
+	$(CC) $(CFLAGS) -c request.c -pthread
 
 clean:
 	rm -f httpserver *.o
