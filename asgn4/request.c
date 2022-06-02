@@ -13,9 +13,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 void writelog(Request *r, Response *a, FILE *logfile) {
-//    printf("WRITING TO THE LOGFILE\n");
+    //    printf("WRITING TO THE LOGFILE\n");
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
-  //  printf("%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
+    //  printf("%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
     fflush(logfile);
     //  fflush(stdout);
 }
@@ -216,7 +216,7 @@ int headreadstart(
         // printf("headreadstart inf loop\n");
         if (!(inbufsize > 0 && timesgone == 0)) {
             readcur = read(connfd, readbuff + readed, toread - readed);
-        //    printf("%d readcur is\n", readcur);
+            //    printf("%d readcur is\n", readcur);
             //      printf("%s", readbuff);
             if (readcur == 0) {
                 //        printf("problem in the head reading process\n");
@@ -338,18 +338,17 @@ const char *get_type(Request *r) {
     return r->type;
 }
 
-
 pthread_mutex_t filechecklock = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t loglock = PTHREAD_MUTEX_INITIALIZER;
 int execute_get(Request *r, int connfd, FILE *logfile) {
     // int types = type(r);
     //  printf("EXECUTING GET\n");
-  //  printf("uri is %s\n", r->uri + 1);
+    //  printf("uri is %s\n", r->uri + 1);
     pthread_mutex_lock(&filechecklock);
     int opened = open(r->uri + 1, __O_PATH);
-   // printf("file descriptor is %d\n", opened);
-   if (opened == -1) {
+    // printf("file descriptor is %d\n", opened);
+    if (opened == -1) {
         if ((errno == EACCES) || (errno == EISDIR)) {
             Response *errrep = response_create(403);
 
@@ -358,7 +357,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
             writelog(r, errrep, logfile);
             pthread_mutex_unlock(&loglock);
-    pthread_mutex_unlock(&filechecklock);
+            pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
             return 1;
@@ -370,8 +369,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
             writelog(r, errrep, logfile);
             pthread_mutex_unlock(&loglock);
-    pthread_mutex_unlock(&filechecklock);
-
+            pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
 
@@ -385,15 +383,13 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
             pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
 
-
-           response_delete(&errrep);
+            response_delete(&errrep);
             return 1;
         }
-    }else{
-      opened = open(r->uri + 1, O_RDONLY);
-      flock(opened, LOCK_SH);
-      pthread_mutex_unlock(&filechecklock);
-
+    } else {
+        opened = open(r->uri + 1, O_RDONLY);
+        flock(opened, LOCK_SH);
+        pthread_mutex_unlock(&filechecklock);
     }
     int resptype = 200;
     Response *resp = response_create(resptype);
@@ -401,24 +397,23 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
     //    printf("we got the lock\n");
     write_file(resp, opened, connfd);
 
-  
     pthread_mutex_lock(&loglock);
     writelog(r, resp, logfile);
 
     pthread_mutex_unlock(&loglock);
-      flock(opened, LOCK_UN);
+    flock(opened, LOCK_UN);
     response_delete(&resp);
 
     return 0;
 }
 int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *writtenfrombuf,
     int inbufsize, FILE *logfile) {
-//    printf("WE SHOULD NOT BE HERE\n");
+    //    printf("WE SHOULD NOT BE HERE\n");
     int resptype = 0;
     char templ[8] = "tXXXXXX";
     int tempfd = mkstemp(templ);
     if (tempfd == -1) {
-  //      printf("error making temp file\n");
+        //      printf("error making temp file\n");
     }
     int writed = 0;
     if (inbufsize >= r->content_len) {
@@ -467,12 +462,12 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
         }
     }
     resptype = 200;
-   pthread_mutex_lock(&filechecklock); 
+    pthread_mutex_lock(&filechecklock);
     int opened = open(r->uri + 1, __O_PATH);
-       if (opened == -1) {
+    if (opened == -1) {
         int errord = errno;
         if (errord == ENOENT) {
-    //        flock(opened, LOCK_UN);
+            //        flock(opened, LOCK_UN);
             resptype = 404;
             Response *resp = response_create(resptype);
             writeresp(resp, connfd);
@@ -481,15 +476,15 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
             writelog(r, resp, logfile);
 
             pthread_mutex_unlock(&loglock);
-              pthread_mutex_unlock(&filechecklock); 
+            pthread_mutex_unlock(&filechecklock);
             response_delete(&resp);
             return 1;
         }
     }
-  
+
     flock(opened, LOCK_EX);
     int connopen = open(r->uri + 1, O_WRONLY | O_APPEND);
-   int transfer = 0;
+    int transfer = 0;
     int numwrite = r->content_len;
     char buffs[2048];
     int readed = 0;
@@ -522,7 +517,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     int inbufsize, FILE *logfile) {
     bool created = false;
     int resptype = 0;
- //   printf("DOIN A PUT REQUEST HERE\n");
+    //   printf("DOIN A PUT REQUEST HERE\n");
     //   printf("put length %d", r->content_len);
     bool opens = true;
     /*    int opened = open(r->uri + 1, O_RDWR | O_TRUNC);
@@ -579,7 +574,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
                     readed = read(connfd, bufftwo, 1024);
                     totalwrote += readed;
                 } else {
-   //                 printf("rembuff read %d\n", r->content_len - totalwrote);
+                    //                 printf("rembuff read %d\n", r->content_len - totalwrote);
                     readed = read(connfd, bufftwo, r->content_len - totalwrote);
                     totalwrote += readed;
                     //                 write(writeloggerput, "second\n", 7);
@@ -600,37 +595,34 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         }
         resptype = 200;
     }
-    
-//    printf("done with buff %d\n", r->Reqid);
-//    bool newfile;
+
+    //    printf("done with buff %d\n", r->Reqid);
+    //    bool newfile;
     pthread_mutex_lock(&filechecklock);
 
     int opened = open(r->uri + 1, __O_PATH);
     int createdfd = 0;
     created = false;
-    if(opened == -1){
-       created = true;
-       createdfd = open(r->uri + 1, O_CREAT| O_RDWR, 0666);
-       flock(createdfd, LOCK_EX);
-       pthread_mutex_unlock(&filechecklock);
-       
+    if (opened == -1) {
+        created = true;
+        createdfd = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
+        flock(createdfd, LOCK_EX);
+        pthread_mutex_unlock(&filechecklock);
 
-        
+    } else {
+        //    printf("before lock problem\n");
+        flock(opened, LOCK_EX);
+        pthread_mutex_unlock(&filechecklock);
 
-    }else{
-    //    printf("before lock problem\n");
-       flock(opened, LOCK_EX);
-  pthread_mutex_unlock(&filechecklock);
-
-    //   printf("this can't happen before the get\n");
-    //  printf("in the critical sectione\n");
-    //   open(r->uri + 1, O_RDWR | O_TRUNC);
-     //  printf("criti section%d\n", r->Reqid);
+        //   printf("this can't happen before the get\n");
+        //  printf("in the critical sectione\n");
+        //   open(r->uri + 1, O_RDWR | O_TRUNC);
+        //  printf("criti section%d\n", r->Reqid);
     }
     if (rename(templ, r->uri + 1) != 0) {
         printf("rename more like relame\n");
     }
-      remove(templ);
+    remove(templ);
     //  close(tempfd);
 
     //  resptype = 200;
@@ -655,13 +647,13 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         writelog(r, resp, logfile);
 
         pthread_mutex_unlock(&loglock);
+        flock(opened, LOCK_UN);
 
         response_delete(&resp);
     }
-   printf("done with%d\n", r->Reqid);
-   
-  flock(opened, LOCK_UN);
-//  flock(checkop, LOCK_UN);
+    //   printf("done with%d\n", r->Reqid);
+
+    //  flock(checkop, LOCK_UN);
     if (resptype != 200) {
         return 1;
     }

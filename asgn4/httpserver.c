@@ -1,4 +1,4 @@
-
+#include <errno.h>
 #include <inttypes.h>
 #include <netinet/in.h>
 #include <signal.h>
@@ -26,13 +26,23 @@ pthread_t *threadq;
 int threads = DEFAULT_THREAD_COUNT;
 bool stop = false;
 void sighand() {
-    fflush(logfile);
-
-    fclose(logfile);
+    //    fflush(logfile);
+    //printf("handling signal\n");
+    //    fclose(logfile);
     for (int i = 0; i < threads; i++) {
-        fflush(stdout);
+        //        fflush(stdout);
         pthread_cancel(threadq[i]);
+        //       printf("not cancelling\n");
+        //  }
+        //   }
+        //  for (int i = 0; i < threads; i++) {
+
+        //       pthread_join(threadq[i], NULL);
+        if (errno == EINVAL) {
+            printf("invalid\n");
+        }
     }
+
     exit(1);
 }
 
@@ -92,7 +102,7 @@ static void handle_connection(int connfd) {
         //               break;
     }
     int typed = type(&r);
-  //  printf("the type is %d\n", typed);
+    //  printf("the type is %d\n", typed);
     switch (typed) {
     case 1: execute_get(&r, connfd, logfile); break;
     case 3:
@@ -164,10 +174,15 @@ void sigterm_handler() {
     for (int i = 0; i < threads; i++) {
 
         pthread_cancel(threadq[i]);
+        // }
+        //  fflush(stdout);
+        //    fflush(logfile);
+        //   fclose(logfile);
+        // for (int i = 0; i < threads; i++) {
+
+        //       pthread_join(threadq[i], NULL);
     }
-    fflush(stdout);
-    fflush(logfile);
-    fclose(logfile);
+
     exit(EXIT_SUCCESS);
 }
 
@@ -187,9 +202,12 @@ pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 pthread_cond_t emptied = PTHREAD_COND_INITIALIZER;
 void *threadjob() {
     int theconnfd = -1;
+    //  printf("starts here\n");
     while (1) {
+        //    printf("stucked here\n");
         pthread_mutex_lock(&qlock);
         while (empty(&jobqueue)) {
+            //        printf("thread ends here bfore the end\n");
             pthread_cond_wait(&emptied, &qlock);
         }
 
@@ -205,6 +223,7 @@ void *threadjob() {
 void produceconnfd(int connfd) {
     //    printf("getting a conn\n");
     pthread_mutex_lock(&qlock);
+    printf("doing a queue\n");
     while (full(&jobqueue)) {
         pthread_cond_wait(&fill, &qlock);
     }
@@ -258,7 +277,7 @@ int main(int argc, char *argv[]) {
         pthread_create(&threadq[i], NULL, threadjob, NULL);
     }
 
-//    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
+    //    LOG("port=%" PRIu16 ", threads=%d\n", port, threads);
 
     for (;;) {
         int connfd = accept(listenfd, NULL, NULL);

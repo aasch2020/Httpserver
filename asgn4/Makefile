@@ -14,7 +14,6 @@ sockdem.o: sockdem.c
 
 httpserver.o: httpserver.c
 	$(CC) $(CFLAGS) -c httpserver.c
-
 requesttest: requesttest.o request.o
 	$(CC) -o requesttest requesttest.o request.o
 
