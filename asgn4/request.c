@@ -325,24 +325,24 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
     int opened = open(r->uri + 1, O_RDONLY);
     if (opened == -1) {
         if ((errno == EACCES) || (errno == EISDIR)) {
+            pthread_mutex_lock(&loglock);
             Response *errrep = response_create(403);
 
             writeresp(errrep, connfd);
-            //    pthread_mutex_lock(&loglock);
 
             writelog(r, errrep, logfile);
-            //      pthread_mutex_unlock(&loglock);
+            pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
             return 1;
         } else if (errno == ENOENT) {
+            pthread_mutex_lock(&loglock);
             Response *errrep = response_create(404);
             writeresp(errrep, connfd);
-            //  pthread_mutex_lock(&loglock);
 
             writelog(r, errrep, logfile);
-            //  pthread_mutex_unlock(&loglock);
+            pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
@@ -351,22 +351,21 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         } else {
             Response *errrep = response_create(500);
             writeresp(errrep, connfd);
-            //  pthread_mutex_lock(&loglock);
+            pthread_mutex_lock(&loglock);
 
             writelog(r, errrep, logfile);
-            //  pthread_mutex_unlock(&loglock);
+            pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
             return 1;
         }
     } else {
-        //        opened = open(r->uri + 1, O_RDONLY);
         flock(opened, LOCK_SH);
         pthread_mutex_unlock(&filechecklock);
     }
     int resptype = 200;
-    //    pthread_mutex_lock(&loglock);
+    pthread_mutex_lock(&loglock);
 
     Response *resp = response_create(resptype);
 
@@ -375,7 +374,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
     writelog(r, resp, logfile);
 
-    //    pthread_mutex_unlock(&loglock);
+    pthread_mutex_unlock(&loglock);
     flock(opened, LOCK_UN);
     response_delete(&resp);
 
@@ -429,11 +428,11 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
             resptype = 404;
             Response *resp = response_create(resptype);
             writeresp(resp, connfd);
-            //        pthread_mutex_lock(&loglock);
+            pthread_mutex_lock(&loglock);
 
             writelog(r, resp, logfile);
 
-            //          pthread_mutex_unlock(&loglock);
+            pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
             response_delete(&resp);
             return 1;
@@ -471,34 +470,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     int inbufsize, FILE *logfile) {
     bool created = false;
     int resptype = 0;
-    //   printf("DOIN A PUT REQUEST HERE\n");
-    //   printf("put length %d", r->content_len);
     bool opens = true;
-    /*    int opened = open(r->uri + 1, O_RDWR | O_TRUNC);
-    if (opened == -1) {
-        //        printf("no file\n");
-        if (errno == ENOENT) {
-            created = false;
-            opens = true;
-            opened = open(r->uri + 1, O_RDWR | O_CREAT, S_IRWXU);
-            if ((errno == EACCES) || (errno == EISDIR)) {
-                resptype = 403;
-                opens = false;
-            } else {
-                created = true;
-            }
-        } else if ((errno == EACCES) || (errno == EISDIR)) {
-            resptype = 403;
-            opens = false;
-        } else {
-      printf("servererr here\n");
-            opens = false;
-            resptype = 500;
-        }
-    } else {
-        opens = true;
-    }*/
-    // printf("%d\n", opened);
     char templ[8] = "tXXXXXX";
     int tempfd = mkstemp(templ);
     if (tempfd == -1) {
@@ -558,19 +530,19 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     }
     remove(templ);
     if (created) {
-        //   pthread_mutex_lock(&loglock);
+        pthread_mutex_lock(&loglock);
 
         Response *resp = response_create(201);
         writeresp(resp, connfd);
 
         writelog(r, resp, logfile);
 
-        //      pthread_mutex_unlock(&loglock);
+        pthread_mutex_unlock(&loglock);
         flock(createdfd, LOCK_UN);
 
         response_delete(&resp);
     } else {
-        //       pthread_mutex_lock(&loglock);
+        pthread_mutex_lock(&loglock);
 
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
@@ -578,7 +550,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         writelog(r, resp, logfile);
         flock(opened, LOCK_UN);
 
-        //        pthread_mutex_unlock(&loglock);
+        pthread_mutex_unlock(&loglock);
         response_delete(&resp);
     }
     if (resptype != 200) {
