@@ -537,7 +537,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         transfer += readed;
     }
 
-    //   remove(templ);
+    remove(templ);
     if (created) {
         Response *resp = response_create(201);
         writeresp(resp, connfd);
