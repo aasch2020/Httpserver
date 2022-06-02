@@ -325,10 +325,10 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
     int opened = open(r->uri + 1, O_RDONLY);
     if (opened == -1) {
         if ((errno == EACCES) || (errno == EISDIR)) {
-            pthread_mutex_lock(&loglock);
             Response *errrep = response_create(403);
 
             writeresp(errrep, connfd);
+            pthread_mutex_lock(&loglock);
 
             writelog(r, errrep, logfile);
             pthread_mutex_unlock(&loglock);
@@ -337,9 +337,9 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
             response_delete(&errrep);
             return 1;
         } else if (errno == ENOENT) {
-            pthread_mutex_lock(&loglock);
             Response *errrep = response_create(404);
             writeresp(errrep, connfd);
+            pthread_mutex_lock(&loglock);
 
             writelog(r, errrep, logfile);
             pthread_mutex_unlock(&loglock);
@@ -369,7 +369,6 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
     Response *resp = response_create(resptype);
 
-    //    printf("we got the lock\n");
     write_file(resp, opened, connfd);
 
     writelog(r, resp, logfile);

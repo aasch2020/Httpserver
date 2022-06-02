@@ -64,12 +64,26 @@ Program steps sequentially for one request:
 
 9.Worker thread sends response for PUT or Append.
 
+
+
+File atomicity additions
+
+The server now uses temporary files for PUT and APPEND requests, thus meaning that any partial put or partial append will not be written or logged until complete.
+
+Using this in conjunction with flocks on the files, and a lock on file creation/checking if a file exists, ensure that no PUT or APPEND requests can interleave.
+
+This creates a global critical section for checking the files for existing, and a critical section for writing each file.
+
+Additionally, there also is a lock utilized for whenever there needs to be content written to the log. This ensures that reading and writing to the log will always be atomic.
+
 ## Notable Problems
 
-At this point, non blocking input and output are not implemented. If a client is slow to send data, the server will simply wait until the client is finished.
+At this point, non blocking input and output are not implemented. If a client is slow to send data, the server will simply wait until the client is finished. 
+
+
 
 ## Error Messages.
 
 404 Not Found, when a file for a GET or PUT request is not found
 
-500 Internal Server Error, something went wrong in processing. NOTE: the client may not see this message but it will be logged. 
+500 Internal Server Error, something went wrong in processing. NOTE: the client may not see this message but it will be logged, if a client closes the connection before a request is completed or a response is sent.
