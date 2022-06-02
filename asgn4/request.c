@@ -412,7 +412,7 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     tempfd = open(templ, O_RDWR);
     resptype = 200;
     pthread_mutex_lock(&filechecklock);
-    int opened = open(r->uri + 1, O_RDWR);
+    int opened = open(r->uri + 1, O_RDWR | O_APPEND);
     if (opened == -1) {
         int errord = errno;
         if (errord == ENOENT) {
@@ -430,22 +430,23 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
         flock(opened, LOCK_EX);
         pthread_mutex_unlock(&filechecklock);
     }
-    int connopen = open(r->uri + 1, O_WRONLY | O_APPEND);
     int transfer = 0;
     int numwrite = r->content_len;
     char buffs[2048];
     int readed = 0;
     while (transfer < numwrite) {
         readed = read(tempfd, buffs, 2048);
-        write(connopen, buffs, readed);
+        write(opened, buffs, readed);
         transfer += readed;
     }
-    flock(opened, LOCK_UN);
-
-    close(opened);
+    remove(templ);
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
     writelog(r, resp, logfile);
+    flock(opened, LOCK_UN);
+
+    close(opened);
+
     response_delete(&resp);
     if (resptype != 200) {
         return 1;
