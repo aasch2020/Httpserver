@@ -459,8 +459,6 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     int resptype = 0;
     char templ[8] = "tXXXXXX";
     int tempfd = mkstemp(templ);
-    //  close(tempfd);
-    //  tempfd = open(templ, O_RDWR);
     if (tempfd == -1) {
         printf("error making temp file\n");
     }
@@ -500,27 +498,22 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     resptype = 200;
 
     pthread_mutex_lock(&filechecklock);
-    //   printf("%d got the filechecklock\n", r->Reqid);
     int opened = open(r->uri + 1, O_RDWR);
     flock(opened, LOCK_EX);
-    // int createfd = 0;
-    //   int realfd = 0;
     created = false;
-    //   int newfd = 0;
     if (opened == -1) {
-        //     printf("createdfile with reqid %d\n", r->Reqid);
         created = true;
         flock(opened, LOCK_UN);
 
         opened = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
         flock(opened, LOCK_EX);
-        //   printf("file number  locking create%d\n", r->Reqid);
         pthread_mutex_unlock(&filechecklock);
 
     } else {
         flock(opened, LOCK_UN);
+
         opened = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
-        //    printf("file number got lock %d\n", r->Reqid);
+
         flock(opened, LOCK_EX);
         pthread_mutex_unlock(&filechecklock);
     }
@@ -531,14 +524,10 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
     while (transfer < numwrite) {
         readed = read(tempfd, buffs, 2048);
-        //     printf("%s", buffs);
         write(opened, buffs, readed);
-        //         printf("writing %d %d %d\n", readed, numwrite, transfer);
-
         transfer += readed;
     }
 
-    remove(templ);
     if (created) {
         Response *resp = response_create(201);
         writeresp(resp, connfd);
@@ -557,5 +546,8 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         // close(opened);
         response_delete(&resp);
     }
+    close(tempfd);
+    remove(templ);
+
     return 0;
 }
