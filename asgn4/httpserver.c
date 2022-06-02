@@ -158,6 +158,7 @@ void sigterm_handler() {
         pthread_cancel(threadq[i]);
     }
     fflush(logfile);
+    fclose(logfile);
     exit(EXIT_SUCCESS);
 }
 

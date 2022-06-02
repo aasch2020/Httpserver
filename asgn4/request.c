@@ -17,7 +17,7 @@
 void writelog(Request *r, Response *a, FILE *logfile) {
     //  pthread_mutex_lock(&loglock);
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
-    fflush(logfile);
+    //    fflush(logfile);
     //  pthread_mutex_unlock(&loglock);
 }
 Request *request_create() {
@@ -500,13 +500,16 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     int createdfd = 0;
     created = false;
     if (opened == -1) {
+        printf("createdfile with reqid %d\n", r->Reqid);
         created = true;
         createdfd = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
         flock(createdfd, LOCK_EX);
+        printf("file number  locking create%d\n", r->Reqid);
         pthread_mutex_unlock(&filechecklock);
 
     } else {
         flock(opened, LOCK_EX);
+        printf("file number got lock %d\n", r->Reqid);
         pthread_mutex_unlock(&filechecklock);
     }
     if (rename(templ, r->uri + 1) != 0) {
@@ -516,7 +519,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     if (created) {
         Response *resp = response_create(201);
         writeresp(resp, connfd);
-
+        printf("file number loggine create %d\n", r->Reqid);
         writelog(r, resp, logfile);
         flock(createdfd, LOCK_UN);
 
@@ -524,7 +527,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     } else {
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
-
+        printf("file number loggind normal %d\n", r->Reqid);
         writelog(r, resp, logfile);
         flock(opened, LOCK_UN);
         response_delete(&resp);
