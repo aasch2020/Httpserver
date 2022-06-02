@@ -319,7 +319,7 @@ const char *get_type(Request *r) {
 
 pthread_mutex_t filechecklock = PTHREAD_MUTEX_INITIALIZER;
 
-pthread_mutex_t loglock = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t loglock = PTHREAD_MUTEX_INITIALIZER;
 int execute_get(Request *r, int connfd, FILE *logfile) {
     pthread_mutex_lock(&filechecklock);
     int opened = open(r->uri + 1, O_RDONLY);
@@ -328,10 +328,10 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
             Response *errrep = response_create(403);
 
             writeresp(errrep, connfd);
-            pthread_mutex_lock(&loglock);
+            //            pthread_mutex_lock(&loglock);
 
             writelog(r, errrep, logfile);
-            pthread_mutex_unlock(&loglock);
+            //          pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
@@ -339,10 +339,10 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         } else if (errno == ENOENT) {
             Response *errrep = response_create(404);
             writeresp(errrep, connfd);
-            pthread_mutex_lock(&loglock);
+            //        pthread_mutex_lock(&loglock);
 
             writelog(r, errrep, logfile);
-            pthread_mutex_unlock(&loglock);
+            //      pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
@@ -351,10 +351,10 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         } else {
             Response *errrep = response_create(500);
             writeresp(errrep, connfd);
-            pthread_mutex_lock(&loglock);
+            //      pthread_mutex_lock(&loglock);
 
             writelog(r, errrep, logfile);
-            pthread_mutex_unlock(&loglock);
+            //    pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
@@ -365,7 +365,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         pthread_mutex_unlock(&filechecklock);
     }
     int resptype = 200;
-    pthread_mutex_lock(&loglock);
+    //    pthread_mutex_lock(&loglock);
 
     Response *resp = response_create(resptype);
 
@@ -373,7 +373,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
     writelog(r, resp, logfile);
 
-    pthread_mutex_unlock(&loglock);
+    //  pthread_mutex_unlock(&loglock);
     flock(opened, LOCK_UN);
     response_delete(&resp);
 
@@ -427,11 +427,11 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
             resptype = 404;
             Response *resp = response_create(resptype);
             writeresp(resp, connfd);
-            pthread_mutex_lock(&loglock);
+            //        pthread_mutex_lock(&loglock);
 
             writelog(r, resp, logfile);
 
-            pthread_mutex_unlock(&loglock);
+            // pthread_mutex_unlock(&loglock);
             pthread_mutex_unlock(&filechecklock);
             response_delete(&resp);
             return 1;
@@ -456,9 +456,9 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     close(opened);
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
-
+    //pthread_mutex_lock(&loglock);
     writelog(r, resp, logfile);
-
+    //pthread_mutex_unlock(&filechecklock)
     response_delete(&resp);
     if (resptype != 200) {
         return 1;
@@ -529,19 +529,19 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     }
     remove(templ);
     if (created) {
-        pthread_mutex_lock(&loglock);
+        //       pthread_mutex_lock(&loglock);
 
         Response *resp = response_create(201);
         writeresp(resp, connfd);
 
         writelog(r, resp, logfile);
 
-        pthread_mutex_unlock(&loglock);
+        //     pthread_mutex_unlock(&loglock);
         flock(createdfd, LOCK_UN);
 
         response_delete(&resp);
     } else {
-        pthread_mutex_lock(&loglock);
+        //   pthread_mutex_lock(&loglock);
 
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
@@ -549,7 +549,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         writelog(r, resp, logfile);
         flock(opened, LOCK_UN);
 
-        pthread_mutex_unlock(&loglock);
+        //     pthread_mutex_unlock(&loglock);
         response_delete(&resp);
     }
     if (resptype != 200) {
