@@ -30,7 +30,7 @@ void sighand() {
     fclose(logfile);
     for (int i = 0; i < threads; i++) {
         //        fflush(stdout);
-        //               pthread_join(threadq[i], NULL);
+        pthread_cancel(threadq[i]);
         if (errno == EINVAL) {
             printf("invalid\n");
         }
