@@ -136,10 +136,7 @@ static void handle_connection(int connfd) {
         badreq = true;
         memset(onebuff, '\0', 2048);
         memset(twobuff, '\0', 2048);
-<<<<<<< HEAD
-=======
         break;
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
     }
     request_clear(&r);
     if (chekr == -1) {
@@ -247,10 +244,6 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < threads; i++) {
         pthread_create(&threadq[i], NULL, threadjob, NULL);
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
     for (;;) {
         int connfd = accept(listenfd, NULL, NULL);
         if (connfd < 0) {

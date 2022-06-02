@@ -328,14 +328,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
             Response *errrep = response_create(403);
 
             writeresp(errrep, connfd);
-<<<<<<< HEAD
             writelog(r, errrep, logfile);
-=======
-            //            pthread_mutex_lock(&loglock);
-
-            writelog(r, errrep, logfile);
-            //          pthread_mutex_unlock(&loglock);
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
@@ -343,14 +336,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         } else if (errno == ENOENT) {
             Response *errrep = response_create(404);
             writeresp(errrep, connfd);
-<<<<<<< HEAD
             writelog(r, errrep, logfile);
-=======
-            //        pthread_mutex_lock(&loglock);
-
-            writelog(r, errrep, logfile);
-            //      pthread_mutex_unlock(&loglock);
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
@@ -359,14 +345,7 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         } else {
             Response *errrep = response_create(500);
             writeresp(errrep, connfd);
-<<<<<<< HEAD
             writelog(r, errrep, logfile);
-=======
-            //      pthread_mutex_lock(&loglock);
-
-            writelog(r, errrep, logfile);
-            //    pthread_mutex_unlock(&loglock);
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
             pthread_mutex_unlock(&filechecklock);
 
             response_delete(&errrep);
@@ -383,10 +362,6 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
 
     writelog(r, resp, logfile);
 
-<<<<<<< HEAD
-=======
-    //  pthread_mutex_unlock(&loglock);
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
     flock(opened, LOCK_UN);
     response_delete(&resp);
 
@@ -397,10 +372,6 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     int resptype = 0;
     char templ[8] = "tXXXXXX";
     int tempfd = mkstemp(templ);
-<<<<<<< HEAD
-
-=======
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
     int writed = 0;
     if (inbufsize >= r->content_len) {
         writed = write(tempfd, buffer, r->content_len);
@@ -445,10 +416,6 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
             writeresp(resp, connfd);
             writelog(r, resp, logfile);
 
-<<<<<<< HEAD
-=======
-            // pthread_mutex_unlock(&loglock);
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
             pthread_mutex_unlock(&filechecklock);
             response_delete(&resp);
             return 1;
@@ -473,12 +440,7 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     close(opened);
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
-    //pthread_mutex_lock(&loglock);
     writelog(r, resp, logfile);
-<<<<<<< HEAD
-=======
-    //    pthread_mutex_unlock(&filechecklock)
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
     response_delete(&resp);
     if (resptype != 200) {
         return 1;
@@ -549,39 +511,19 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     }
     remove(templ);
     if (created) {
-<<<<<<< HEAD
-=======
-        //       pthread_mutex_lock(&loglock);
-
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
         Response *resp = response_create(201);
         writeresp(resp, connfd);
 
         writelog(r, resp, logfile);
-<<<<<<< HEAD
-=======
-
-        //     pthread_mutex_unlock(&loglock);
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
         flock(createdfd, LOCK_UN);
 
         response_delete(&resp);
     } else {
-<<<<<<< HEAD
-=======
-        //   pthread_mutex_lock(&loglock);
-
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
 
         writelog(r, resp, logfile);
         flock(opened, LOCK_UN);
-<<<<<<< HEAD
-=======
-
-        //     pthread_mutex_unlock(&loglock);
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
         response_delete(&resp);
     }
     if (resptype != 200) {
