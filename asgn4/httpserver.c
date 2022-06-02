@@ -26,9 +26,9 @@ pthread_t *threadq;
 int threads = DEFAULT_THREAD_COUNT;
 bool stop = false;
 void sighand() {
-    //    fflush(logfile);
+        fflush(logfile);
     //printf("handling signal\n");
-    //    fclose(logfile);
+        fclose(logfile);
     for (int i = 0; i < threads; i++) {
         //        fflush(stdout);
         pthread_cancel(threadq[i]);
@@ -37,7 +37,7 @@ void sighand() {
         //   }
         //  for (int i = 0; i < threads; i++) {
 
-        //       pthread_join(threadq[i], NULL);
+//               pthread_join(threadq[i], NULL);
         if (errno == EINVAL) {
             printf("invalid\n");
         }
@@ -174,14 +174,14 @@ void sigterm_handler() {
     for (int i = 0; i < threads; i++) {
 
         pthread_cancel(threadq[i]);
-        // }
+         }
         //  fflush(stdout);
-        //    fflush(logfile);
+            fflush(logfile);
         //   fclose(logfile);
         // for (int i = 0; i < threads; i++) {
 
         //       pthread_join(threadq[i], NULL);
-    }
+    
 
     exit(EXIT_SUCCESS);
 }
@@ -201,6 +201,8 @@ pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 
 pthread_cond_t emptied = PTHREAD_COND_INITIALIZER;
 void *threadjob() {
+//    int a = 0;
+  //  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &a);
     int theconnfd = -1;
     //  printf("starts here\n");
     while (1) {
@@ -223,7 +225,7 @@ void *threadjob() {
 void produceconnfd(int connfd) {
     //    printf("getting a conn\n");
     pthread_mutex_lock(&qlock);
-    printf("doing a queue\n");
+//    printf("doing a queue\n");
     while (full(&jobqueue)) {
         pthread_cond_wait(&fill, &qlock);
     }

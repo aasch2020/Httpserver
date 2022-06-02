@@ -392,13 +392,14 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         pthread_mutex_unlock(&filechecklock);
     }
     int resptype = 200;
+  pthread_mutex_lock(&loglock);
+
     Response *resp = response_create(resptype);
 
     //    printf("we got the lock\n");
     write_file(resp, opened, connfd);
 
-    pthread_mutex_lock(&loglock);
-    writelog(r, resp, logfile);
+      writelog(r, resp, logfile);
 
     pthread_mutex_unlock(&loglock);
     flock(opened, LOCK_UN);
@@ -498,11 +499,11 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     flock(opened, LOCK_UN);
 
     close(opened);
+  pthread_mutex_lock(&loglock);
 
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
-    pthread_mutex_lock(&loglock);
-
+  
     writelog(r, resp, logfile);
 
     pthread_mutex_unlock(&loglock);
@@ -595,6 +596,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         }
         resptype = 200;
     }
+ //   printf("done with processing %d\n", r->Reqid);
 
     //    printf("done with buff %d\n", r->Reqid);
     //    bool newfile;
@@ -629,10 +631,11 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     //   printf("now we do the response\n");
     if (created) {
         //        printf("getting respomse create done\n");
-        Response *resp = response_create(201);
+   pthread_mutex_lock(&loglock);
+   
+    Response *resp = response_create(201);
         writeresp(resp, connfd);
-        pthread_mutex_lock(&loglock);
-
+      
         writelog(r, resp, logfile);
 
         pthread_mutex_unlock(&loglock);
@@ -640,10 +643,11 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         response_delete(&resp);
         flock(createdfd, LOCK_UN);
     } else {
+       pthread_mutex_lock(&loglock);
+
         Response *resp = response_create(resptype);
         writeresp(resp, connfd);
-        pthread_mutex_lock(&loglock);
-
+ 
         writelog(r, resp, logfile);
 
         pthread_mutex_unlock(&loglock);
