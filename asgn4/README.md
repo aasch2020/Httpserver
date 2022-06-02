@@ -1,8 +1,5 @@
 # CSE130 Repo
 
-<<<<<<< HEAD
-Repo to hold CSE130 work.
-=======
 This program is an HTTPserver that implementes GET PUT and APPEND methods, with an audit log and multithreading support
 
 ## Building
@@ -90,4 +87,4 @@ At this point, non blocking input and output are not implemented. If a client is
 404 Not Found, when a file for a GET or PUT request is not found
 
 500 Internal Server Error, something went wrong in processing. NOTE: the client may not see this message but it will be logged, if a client closes the connection before a request is completed or a response is sent.
->>>>>>> b2261b7672d665800c63e3fae4fda2c1cfd735d1
+
