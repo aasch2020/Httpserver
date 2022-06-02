@@ -458,7 +458,7 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     writeresp(resp, connfd);
     //pthread_mutex_lock(&loglock);
     writelog(r, resp, logfile);
-    //pthread_mutex_unlock(&filechecklock)
+    //    pthread_mutex_unlock(&filechecklock)
     response_delete(&resp);
     if (resptype != 200) {
         return 1;
