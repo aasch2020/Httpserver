@@ -454,14 +454,12 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     int inbufsize, FILE *logfile) {
     bool created = false;
     int resptype = 0;
-    bool opens = true;
-    char templ[8] = "tXXXXXX";
+   char templ[8] = "tXXXXXX";
     int tempfd = mkstemp(templ);
     if (tempfd == -1) {
         printf("error making temp file\n");
     }
-    if (opens) {
-        int writed = 0;
+       int writed = 0;
         if (inbufsize >= r->content_len) {
             writed = write(tempfd, buffer, r->content_len);
             memcpy(writtenfrombuf, buffer + writed, inbufsize - r->content_len);
@@ -489,43 +487,50 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
                     printf("the connection died\n");
                     return -1;
                 }
-                readed = 0;
-            }
+                           }
         }
         resptype = 200;
-    }
+    
     pthread_mutex_lock(&filechecklock);
-
+//printf("%d got the filechecklock\n", r->Reqid);
     int opened = open(r->uri + 1, __O_PATH);
     flock(opened, LOCK_EX);
-    int createdfd = 0;
+    int realfd = 0;
     created = false;
     //   int newfd = 0;
     if (opened == -1) {
         printf("createdfile with reqid %d\n", r->Reqid);
         created = true;
-        createdfd = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
-        flock(createdfd, LOCK_EX);
-        printf("file number  locking create%d\n", r->Reqid);
+        realfd = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
+       flock(realfd, LOCK_EX);
+       printf("file number  locking create%d\n", r->Reqid);
         pthread_mutex_unlock(&filechecklock);
 
     } else {
-        //    newfd = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
-        //   flock(newfd, LOCK_EX);
+        realfd = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
         printf("file number got lock %d\n", r->Reqid);
 
         pthread_mutex_unlock(&filechecklock);
     }
-    if (rename(templ, r->uri + 1) != 0) {
-        printf("rename more like relame\n");
+    int transfer = 0;
+    int numwrite = r->content_len;
+    char buffs[2048];
+    int readed = 0;
+ 
+    while (transfer < numwrite) {
+        readed = read(tempfd, buffs, 2048);
+        write(realfd, buffs, readed);
+        transfer += numwrite;
     }
+ 
     remove(templ);
     if (created) {
         Response *resp = response_create(201);
         writeresp(resp, connfd);
         printf("file number loggine create %d\n", r->Reqid);
         writelog(r, resp, logfile);
-        flock(createdfd, LOCK_UN);
+        flock(realfd, LOCK_UN); 
+        close(realfd);
 
         response_delete(&resp);
     } else {
@@ -534,10 +539,8 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         printf("file number logging normal %d\n", r->Reqid);
         writelog(r, resp, logfile);
         flock(opened, LOCK_UN);
+        close(opened);
         response_delete(&resp);
     }
-    if (resptype != 200) {
-        return 1;
-    }
-    return 0;
+      return 0;
 }
