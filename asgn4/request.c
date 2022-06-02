@@ -499,6 +499,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     int opened = open(r->uri + 1, __O_PATH);
     int createdfd = 0;
     created = false;
+    int newfd = 0;
     if (opened == -1) {
         printf("createdfile with reqid %d\n", r->Reqid);
         created = true;
@@ -508,8 +509,10 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         pthread_mutex_unlock(&filechecklock);
 
     } else {
-        flock(opened, LOCK_EX);
-        printf("file number got lock %d\n", r->Reqid);
+         printf("file number got lock %d\n", r->Reqid);
+         newfd = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
+         flock(newfd, LOCK_EX);
+  //    
         pthread_mutex_unlock(&filechecklock);
     }
     if (rename(templ, r->uri + 1) != 0) {
@@ -529,7 +532,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         writeresp(resp, connfd);
         printf("file number loggind normal %d\n", r->Reqid);
         writelog(r, resp, logfile);
-        flock(opened, LOCK_UN);
+        flock(newfd, LOCK_UN);
         response_delete(&resp);
     }
     if (resptype != 200) {
