@@ -499,12 +499,12 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
     pthread_mutex_lock(&filechecklock);
     int opened = open(r->uri + 1, O_RDWR);
-    flock(opened, LOCK_EX);
+    if (-1 == flock(opened, LOCK_EX)) {
+        //    printf("bad flock\n");
+    }
     created = false;
     if (opened == -1) {
         created = true;
-        flock(opened, LOCK_UN);
-
         opened = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
         flock(opened, LOCK_EX);
         pthread_mutex_unlock(&filechecklock);
@@ -514,7 +514,6 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
         opened = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
 
-        flock(opened, LOCK_EX);
         pthread_mutex_unlock(&filechecklock);
     }
     int transfer = 0;
@@ -546,6 +545,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         // close(opened);
         response_delete(&resp);
     }
+    close(opened);
     close(tempfd);
     remove(templ);
 
