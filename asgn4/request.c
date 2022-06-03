@@ -363,8 +363,8 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
     int resptype = 200;
     Response *resp = response_create(resptype);
     writelog(r, resp, logfile);
-    write_file(resp, opened, connfd);
     flock(opened, LOCK_UN);
+    write_file(resp, opened, connfd);
 
     response_delete(&resp);
 
@@ -539,10 +539,10 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         Response *resp = response_create(201);
         writelog(r, resp, logfile);
 
-        writeresp(resp, connfd);
         //  printf("file number loggine create %d\n", r->Reqid);
         flock(opened, LOCK_UN);
         //      close(opened);
+        writeresp(resp, connfd);
 
         response_delete(&resp);
     } else {
@@ -550,9 +550,10 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         Response *resp = response_create(resptype);
         writelog(r, resp, logfile);
 
-        writeresp(resp, connfd);
         //   printf("file number logging normal %d\n", r->Reqid);
         flock(opened, LOCK_UN);
+        writeresp(resp, connfd);
+
         // close(opened);
         response_delete(&resp);
     }
