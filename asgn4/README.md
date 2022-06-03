@@ -80,7 +80,7 @@ Additionally, there also is a lock utilized for whenever there needs to be conte
 
 At this point, non blocking input and output are not implemented. If a client is slow to send data, the server will simply wait until the client is finished. 
 
-
+Additionally, the program is reported to timeout on test vigirours newton, however, I have been unable to reproduce this issue.
 
 ## Error Messages.
 
