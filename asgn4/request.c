@@ -506,7 +506,10 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     created = false;
     if (opened == -1) {
         created = true;
+        flock(opened, LOCK_UN);
+
         opened = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
+
         flock(opened, LOCK_EX);
         pthread_mutex_unlock(&filechecklock);
 
@@ -514,6 +517,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         flock(opened, LOCK_UN);
 
         opened = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
+        flock(opened, LOCK_EX);
 
         pthread_mutex_unlock(&filechecklock);
     }
@@ -532,10 +536,10 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
         Response *resp = response_create(201);
         writelog(r, resp, logfile);
+        flock(opened, LOCK_UN);
 
         writeresp(resp, connfd);
         //  printf("file number loggine create %d\n", r->Reqid);
-        flock(opened, LOCK_UN);
         close(opened);
 
         response_delete(&resp);
@@ -543,10 +547,10 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
         Response *resp = response_create(resptype);
         writelog(r, resp, logfile);
+        flock(opened, LOCK_UN);
 
         writeresp(resp, connfd);
         //   printf("file number logging normal %d\n", r->Reqid);
-        flock(opened, LOCK_UN);
         // close(opened);
         response_delete(&resp);
     }
