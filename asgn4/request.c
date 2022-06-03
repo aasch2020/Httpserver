@@ -1,3 +1,4 @@
+#include <sys/stat.h>
 #include "request.h"
 #include <pthread.h>
 #include <fcntl.h>
@@ -326,6 +327,9 @@ pthread_mutex_t filechecklock = PTHREAD_MUTEX_INITIALIZER;
 
 int execute_get(Request *r, int connfd, FILE *logfile) {
     pthread_mutex_lock(&filechecklock);
+    int tempfd;
+
+    char templ[8] = "tXXXXXX";
     int opened = open(r->uri + 1, O_RDONLY);
     if (opened == -1) {
         if ((errno == EACCES) || (errno == EISDIR)) {
@@ -357,16 +361,30 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         }
     } else {
         flock(opened, LOCK_SH);
-
         pthread_mutex_unlock(&filechecklock);
+        tempfd = mkstemp(templ);
+        int transfer = 0;
+        struct stat st;
+        stat(r->uri + 1, &st);
+        int numwrite = st.st_size;
+        char buffs[2048];
+        int readed = 0;
+        while (transfer < numwrite) {
+            readed = read(opened, buffs, 2048);
+            write(tempfd, buffs, readed);
+            transfer += readed;
+        }
     }
     int resptype = 200;
     Response *resp = response_create(resptype);
     writelog(r, resp, logfile);
-    write_file(resp, opened, connfd);
     flock(opened, LOCK_UN);
+    close(tempfd);
+    tempfd = open(templ, O_RDWR);
 
+    write_file(resp, tempfd, connfd);
     response_delete(&resp);
+    remove(templ);
 
     return 0;
 }
@@ -374,10 +392,10 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     int inbufsize, FILE *logfile) {
     int resptype = 0;
     char templ[8] = "tXXXXXX";
-    pthread_mutex_lock(&filechecklock);
+    //    pthread_mutex_lock(&filechecklock);
 
     int tempfd = mkstemp(templ);
-    pthread_mutex_unlock(&filechecklock);
+    //    pthread_mutex_unlock(&filechecklock);
 
     int writed = 0;
     if (inbufsize >= r->content_len) {
@@ -447,6 +465,7 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     remove(templ);
     Response *resp = response_create(resptype);
     writeresp(resp, connfd);
+
     writelog(r, resp, logfile);
     flock(opened, LOCK_UN);
 
