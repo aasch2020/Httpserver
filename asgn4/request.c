@@ -363,8 +363,8 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
     int resptype = 200;
     Response *resp = response_create(resptype);
     writelog(r, resp, logfile);
-    flock(opened, LOCK_UN);
     write_file(resp, opened, connfd);
+    flock(opened, LOCK_UN);
 
     response_delete(&resp);
 
