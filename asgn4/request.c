@@ -493,30 +493,30 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
             }
         }
     }
-    pthread_mutex_lock(&filechecklock);
-
     close(tempfd);
     tempfd = open(templ, O_RDWR);
 
     resptype = 200;
 
-    int opened = open(r->uri + 1, O_WRONLY);
+    pthread_mutex_lock(&filechecklock);
+    int opened = open(r->uri + 1, O_RDWR);
     if (-1 == flock(opened, LOCK_EX)) {
         //    printf("bad flock\n");
     }
     created = false;
     if (opened == -1) {
         created = true;
-        opened = open(r->uri + 1, O_CREAT | O_EXCL | O_WRONLY, 0666);
+        opened = open(r->uri + 1, O_CREAT | O_RDWR, 0666);
         flock(opened, LOCK_EX);
+        pthread_mutex_unlock(&filechecklock);
+
     } else {
         flock(opened, LOCK_UN);
 
-        opened = open(r->uri + 1, O_TRUNC | O_WRONLY, 0666);
+        opened = open(r->uri + 1, O_TRUNC | O_RDWR, 0666);
+
+        pthread_mutex_unlock(&filechecklock);
     }
-
-    pthread_mutex_unlock(&filechecklock);
-
     int transfer = 0;
     int numwrite = r->content_len;
     char buffs[2048];
@@ -525,8 +525,6 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     while (transfer < numwrite) {
         readed = read(tempfd, buffs, 2048);
         write(opened, buffs, readed);
-        //        printf("%d", r->Reqid);
-
         transfer += readed;
     }
 
