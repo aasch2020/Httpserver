@@ -16,6 +16,7 @@ pthread_mutex_t loglock = PTHREAD_MUTEX_INITIALIZER;
 
 void writelog(Request *r, Response *a, FILE *logfile) {
     pthread_mutex_lock(&loglock);
+
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
     fflush(logfile);
     pthread_mutex_unlock(&loglock);
@@ -528,19 +529,23 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     }
 
     if (created) {
+
         Response *resp = response_create(201);
+        writelog(r, resp, logfile);
+
         writeresp(resp, connfd);
         //  printf("file number loggine create %d\n", r->Reqid);
-        writelog(r, resp, logfile);
         flock(opened, LOCK_UN);
         close(opened);
 
         response_delete(&resp);
     } else {
+
         Response *resp = response_create(resptype);
+        writelog(r, resp, logfile);
+
         writeresp(resp, connfd);
         //   printf("file number logging normal %d\n", r->Reqid);
-        writelog(r, resp, logfile);
         flock(opened, LOCK_UN);
         // close(opened);
         response_delete(&resp);
