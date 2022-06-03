@@ -375,7 +375,11 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
     int inbufsize, FILE *logfile) {
     int resptype = 0;
     char templ[8] = "tXXXXXX";
+    pthread_mutex_lock(&filechecklock);
+
     int tempfd = mkstemp(templ);
+    pthread_mutex_unlock(&filechecklock);
+
     int writed = 0;
     if (inbufsize >= r->content_len) {
         writed = write(tempfd, buffer, r->content_len);
@@ -409,10 +413,11 @@ int execute_append(Request *r, int connfd, char *buffer, int *fromend, char *wri
             readed = 0;
         }
     }
+    pthread_mutex_lock(&filechecklock);
+
     close(tempfd);
     tempfd = open(templ, O_RDWR);
     resptype = 200;
-    pthread_mutex_lock(&filechecklock);
     int opened = open(r->uri + 1, O_RDWR | O_APPEND);
     if (opened == -1) {
         int errord = errno;
@@ -459,7 +464,11 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     bool created = false;
     int resptype = 0;
     char templ[8] = "tXXXXXX";
+    pthread_mutex_lock(&filechecklock);
+
     int tempfd = mkstemp(templ);
+    pthread_mutex_unlock(&filechecklock);
+
     if (tempfd == -1) {
         printf("error making temp file\n");
     }
@@ -500,19 +509,20 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
     resptype = 200;
 
-    int opened = open(r->uri + 1, O_WRONLY);
+    int opened = open(r->uri + 1, O_WRONLY | O_TRUNC);
     if (-1 == flock(opened, LOCK_EX)) {
         //    printf("bad flock\n");
     }
     created = false;
     if (opened == -1) {
         created = true;
-        opened = open(r->uri + 1, O_CREAT | O_EXCL | O_WRONLY, 0666);
+        opened = open(r->uri + 1, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, 0666);
         flock(opened, LOCK_EX);
     } else {
         flock(opened, LOCK_UN);
 
         opened = open(r->uri + 1, O_TRUNC | O_WRONLY, 0666);
+        flock(opened, LOCK_EX);
     }
 
     pthread_mutex_unlock(&filechecklock);
