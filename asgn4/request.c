@@ -18,7 +18,7 @@ void writelog(Request *r, Response *a, FILE *logfile) {
     pthread_mutex_lock(&loglock);
 
     fprintf(logfile, "%s,%s,%d,%d\n", get_type(r), get_uri(r), resptype(a), reqid(r));
-    fflush(logfile);
+
     pthread_mutex_unlock(&loglock);
 }
 Request *request_create() {
@@ -357,16 +357,15 @@ int execute_get(Request *r, int connfd, FILE *logfile) {
         }
     } else {
         flock(opened, LOCK_SH);
+
         pthread_mutex_unlock(&filechecklock);
     }
     int resptype = 200;
     Response *resp = response_create(resptype);
-
-    write_file(resp, opened, connfd);
-
     writelog(r, resp, logfile);
-
+    write_file(resp, opened, connfd);
     flock(opened, LOCK_UN);
+
     response_delete(&resp);
 
     return 0;
@@ -464,11 +463,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     bool created = false;
     int resptype = 0;
     char templ[8] = "tXXXXXX";
-    pthread_mutex_lock(&filechecklock);
-
     int tempfd = mkstemp(templ);
-    pthread_mutex_unlock(&filechecklock);
-
     if (tempfd == -1) {
         printf("error making temp file\n");
     }
@@ -488,8 +483,8 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         char bufftwo[2048] = { '\0' };
 
         while (totalwrote < r->content_len) {
-            if (r->content_len - totalwrote >= 1024) {
-                readed = read(connfd, bufftwo, 1024);
+            if (r->content_len - totalwrote >= 2048) {
+                readed = read(connfd, bufftwo, 2048);
                 totalwrote += readed;
             } else {
                 readed = read(connfd, bufftwo, r->content_len - totalwrote);
@@ -502,20 +497,19 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
             }
         }
     }
-    pthread_mutex_lock(&filechecklock);
-
     close(tempfd);
     tempfd = open(templ, O_RDWR);
+    created = false;
 
     resptype = 200;
+    pthread_mutex_lock(&filechecklock);
 
     int opened = open(r->uri + 1, O_WRONLY | O_TRUNC);
-    if (-1 == flock(opened, LOCK_EX)) {
-        //    printf("bad flock\n");
-    }
-    created = false;
+    flock(opened, LOCK_EX);
+
     if (opened == -1) {
         created = true;
+        flock(opened, LOCK_UN);
         opened = open(r->uri + 1, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, 0666);
         flock(opened, LOCK_EX);
     } else {
@@ -529,11 +523,11 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
 
     int transfer = 0;
     int numwrite = r->content_len;
-    char buffs[2048];
+    char buffs[4096];
     int readed = 0;
 
     while (transfer < numwrite) {
-        readed = read(tempfd, buffs, 2048);
+        readed = read(tempfd, buffs, 4096);
         write(opened, buffs, readed);
         //        printf("%d", r->Reqid);
 
@@ -548,7 +542,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
         writeresp(resp, connfd);
         //  printf("file number loggine create %d\n", r->Reqid);
         flock(opened, LOCK_UN);
-        close(opened);
+        //      close(opened);
 
         response_delete(&resp);
     } else {
