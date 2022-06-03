@@ -510,7 +510,7 @@ int execute_put(Request *r, int connfd, char *buffer, int *fromend, char *writte
     if (opened == -1) {
         created = true;
         flock(opened, LOCK_UN);
-        opened = open(r->uri + 1, O_CREAT | O_TRUNC | O_WRONLY, 0666);
+        opened = open(r->uri + 1, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, 0666);
         flock(opened, LOCK_EX);
     } else {
         flock(opened, LOCK_UN);
